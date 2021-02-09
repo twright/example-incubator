@@ -2,8 +2,8 @@ from oomodelling import Model
 
 from monitoring.kalman_filter_4p import KalmanFilter4P
 from monitoring.noise_model import NoiseFeedthrough
-from incubator.models.controller_models.controller_model4 import ControllerModel4
-from incubator.models.plant_models.four_parameters_model.four_parameter_model import FourParameterIncubatorPlant
+from models.controller_models.controller_model4 import ControllerModel4
+from models.plant_models.four_parameters_model.four_parameter_model import FourParameterIncubatorPlant
 
 
 class KalmanSystemModel(Model):
