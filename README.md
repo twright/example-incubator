@@ -20,7 +20,7 @@ Run/Read the script [./docs/build_docs.ps1](./docs/build_docs.ps1)
    2. Linux/Mac: `source venv/bin/activate`
 4. Install dependencies:
    1. `pip install -r ./requirements.txt`.
-   
+
 ## After first time setup
 
 Run/Read the script [./run_tests.ps1](./run_tests.ps1)
