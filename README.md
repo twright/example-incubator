@@ -31,3 +31,15 @@ Run/Read the script [./run_tests.ps1](./run_tests.ps1)
 2. Each dataset should come in its own folder, with some documentation explaining what it is all about, and a description of the physical setup.
 3. Medium sized datasets should be zipped (same name as the csv file it contains, so it's easy to find when tests fail to load it).
 4. Large datasets need to be put elsewhere (but a small version of the same dataset should be committed to this repo, with tests that exercise it)
+
+# Creating Unit Tests
+
+Follow the example of [./tests/example_test.py](./tests/example_test.py)
+
+Each test should correspond to one experiment, and each experiment should be targeted at answering one question.
+
+Commit the tests in a way that they can be run automatically and quickly (use the `self.cli_mode`).
+If `self.cli_mode` is true:
+1. Plotting should be avoided.
+2. Optimization problems can be parameterized with a small number of evaluations (so they still run, but it's much quicker).
+3. Tests that involve large data should be adapted in a way that it can be run quickly (e.g., with a subset of the data).
