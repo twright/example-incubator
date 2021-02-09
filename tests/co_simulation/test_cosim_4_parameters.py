@@ -4,10 +4,10 @@ from oomodelling import ModelSolver
 
 import matplotlib.pyplot as plt
 
-from digital_twin.models.plant_models.four_parameters_model.best_parameters import four_param_model_params
-from incubator.models.physical_twin_models import SystemModel4Parameters
-from incubator.visualization.data_plotting import plotly_incubator_data, show_plotly
-from incubator.tests.cli_mode_test import CLIModeTest
+from models.physical_twin_models.system_model4 import SystemModel4Parameters
+from models.plant_models.four_parameters_model.best_parameters import four_param_model_params
+from visualization.data_plotting import plotly_incubator_data, show_plotly
+from tests.cli_mode_test import CLIModeTest
 import pandas as pd
 
 

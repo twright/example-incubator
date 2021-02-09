@@ -4,8 +4,8 @@ from oomodelling import ModelSolver
 
 import matplotlib.pyplot as plt
 
-from incubator.models import SystemModel
-from incubator.tests.cli_mode_test import CLIModeTest
+from models.physical_twin_models.system_model import SystemModel
+from tests.cli_mode_test import CLIModeTest
 
 
 class CosimulationTests(CLIModeTest):

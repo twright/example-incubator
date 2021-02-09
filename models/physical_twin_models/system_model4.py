@@ -1,7 +1,7 @@
 from oomodelling import Model
 
-from digital_twin.models.controller_models.controller_model4 import ControllerModel4
-from digital_twin.models.plant_models.four_parameters_model.four_parameter_model import FourParameterIncubatorPlant
+from models.controller_models.controller_model4 import ControllerModel4
+from models.plant_models.four_parameters_model.four_parameter_model import FourParameterIncubatorPlant
 
 
 class SystemModel4Parameters(Model):

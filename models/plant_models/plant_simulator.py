@@ -6,9 +6,9 @@ from oomodelling import ModelSolver
 
 from communication.server.rpc_server import RPCServer
 from communication.shared.protocol import ROUTING_KEY_PLANTSIMULATOR4
-from digital_twin.data_access.dbmanager.incubator_data_conversion import convert_to_results_db
-from incubator.models.plant_models import FourParameterIncubatorPlant
-from incubator.models.plant_models import create_lookup_table
+from data_access.dbmanager.incubator_data_conversion import convert_to_results_db
+from models.plant_models import FourParameterIncubatorPlant
+from models.plant_models import create_lookup_table
 import numpy as np
 
 

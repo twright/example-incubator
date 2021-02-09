@@ -7,10 +7,10 @@ from scipy.optimize import leastsq
 
 import matplotlib.pyplot as plt
 
-from incubator.data_processing.data_processing import load_data
-from digital_twin.models.plant_models.model_functions import construct_residual, run_experiment_two_parameter_model
-from digital_twin.models.plant_models.two_parameters_model.best_parameters import two_param_model_params
-from incubator.tests.cli_mode_test import CLIModeTest
+from data_processing.data_processing import load_data
+from models.plant_models.model_functions import construct_residual, run_experiment_two_parameter_model
+from models.plant_models.two_parameters_model.best_parameters import two_param_model_params
+from tests.cli_mode_test import CLIModeTest
 import sympy as sp
 
 
@@ -22,10 +22,10 @@ class TestsModelling(CLIModeTest):
 
         # CWD: Example_Digital-Twin_Incubator\software\
         experiments = [
-            "../datasets/calibration_fan_24v/semi_random_movement.csv",
-            # "../datasets/calibration_fan_12v/random_on_off_sequences",
-            # "../datasets/calibration_fan_12v/random_on_off_sequences_1",
-            # "../datasets/calibration_fan_12v/random_on_off_sequences_2"
+            "./datasets/calibration_fan_24v/semi_random_movement.csv",
+            # "./datasets/calibration_fan_12v/random_on_off_sequences",
+            # "./datasets/calibration_fan_12v/random_on_off_sequences_1",
+            # "./datasets/calibration_fan_12v/random_on_off_sequences_2"
             ]
         params = two_param_model_params
 
@@ -38,7 +38,7 @@ class TestsModelling(CLIModeTest):
     def test_run_experiment_two_parameter_model(self):
         params = two_param_model_params
         # CWD: Example_Digital-Twin_Incubator\software\
-        data = load_data("../datasets/calibration_fan_24v/semi_random_movement.csv",
+        data = load_data("./datasets/calibration_fan_24v/semi_random_movement.csv",
                                      desired_timeframe=(-math.inf, 4000))
         results, sol = run_experiment_two_parameter_model(data, params)
 
@@ -66,7 +66,7 @@ class TestsModelling(CLIModeTest):
     def test_check_two_parameter_model_inputs(self):
         params = two_param_model_params
         # CWD: Example_Digital-Twin_Incubator\software\
-        data = load_data("../datasets/calibration_fan_12v/random_on_off_sequences.csv")
+        data = load_data("./datasets/calibration_fan_12v/random_on_off_sequences.csv")
         results, sol = run_experiment_two_parameter_model(data, params, h=3.0)
 
         fig, (ax1, ax2, ax4) = plt.subplots(3, 1)

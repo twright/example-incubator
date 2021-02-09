@@ -5,8 +5,8 @@ import pandas
 from scipy import integrate
 
 from communication.shared.protocol import from_ns_to_s
-from digital_twin.fsutils import resource_file_path
-from incubator.models.plant_models import HEATER_VOLTAGE, HEATER_CURRENT
+from config.config import resource_file_path
+from models.plant_models.globals import HEATER_VOLTAGE, HEATER_CURRENT
 
 
 def load_data(filepath, desired_timeframe=(- math.inf, math.inf), time_unit='s', normalize_time=True, convert_to_seconds=False):

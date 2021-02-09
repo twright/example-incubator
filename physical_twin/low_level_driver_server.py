@@ -6,8 +6,8 @@ from gpiozero import LED
 # Import parameters and shared stuff
 from communication.server.rabbitmq import Rabbitmq
 from communication.shared.protocol import *
-from incubator.physical_twin.sensor_actuator_layer import Heater, Fan, TemperatureSensor
-from incubator.config import config_logger, load_config
+from physical_twin.sensor_actuator_layer import Heater, Fan, TemperatureSensor
+from config import config_logger, load_config
 
 
 class IncubatorDriver:

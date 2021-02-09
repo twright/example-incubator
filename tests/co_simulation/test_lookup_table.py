@@ -1,7 +1,7 @@
 import unittest
 
-from digital_twin.models.plant_models.model_functions import create_lookup_table
-from incubator.tests.cli_mode_test import CLIModeTest
+from models.plant_models.model_functions import create_lookup_table
+from tests.cli_mode_test import CLIModeTest
 import numpy as np
 
 
