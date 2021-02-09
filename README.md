@@ -3,22 +3,12 @@
 The overall purpose of the system is to reach a certain temperature within a box and keep the temperature regardless of content.
 ![Incubator](figures/system.png)
 
-The system consists of:
-
-- A Styrofoam box in order to have an insulated container.
-
-- A heat source to heat up the content within the Styrofoam box.
-
-- A fan to distribute the heating within the box
-
-- A temperature sensor to monitor the temperature within the box
-
-- A temperature Sensor to monitor the temperature outside the box
-
-- A controller to communicate with the digital twin, actuate the heat source and the fan and read sensory information from the temperature sensors.
-
 An introduction to the incubator case study is given in the following publication: TODO
 and the up-to-date documentation in generated in the docs folder.
+
+# Generating and Viewing Documentation
+
+
 
 # Running the Unit Tests
 
