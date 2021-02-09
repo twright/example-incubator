@@ -8,7 +8,7 @@ and the up-to-date documentation in generated in the docs folder.
 
 # Generating and Viewing Documentation
 
-
+Run/Read the script [./docs/build_docs.ps1](./docs/build_docs.ps1)
 
 # Running the Unit Tests
 
