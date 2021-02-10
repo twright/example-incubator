@@ -7,7 +7,7 @@ from gpiozero import LED
 from communication.server.rabbitmq import Rabbitmq
 from communication.shared.protocol import *
 from physical_twin.sensor_actuator_layer import Heater, Fan, TemperatureSensor
-from config import config_logger, load_config
+from config.config import config_logger, load_config
 
 
 class IncubatorDriver:
