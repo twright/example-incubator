@@ -4,7 +4,6 @@ import tempfile
 import matplotlib.pyplot as plt
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
-import plotly.express as px
 
 
 def plot_incubator_data(data):
