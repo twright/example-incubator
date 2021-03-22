@@ -1,4 +1,4 @@
-Experiment conducted by Hao Feng on 4th March 2021
+Experiment conducted by Hao Feng on 4th March 2021 (time zone: UTC+1)
 
 13:31:00 open
 13:33:40 close
@@ -20,5 +20,3 @@ Experiment conducted by Hao Feng on 4th March 2021
 
 16:51:00 open and take out the water
 16:52:30 closed 
-
-
