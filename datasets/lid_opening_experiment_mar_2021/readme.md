@@ -18,7 +18,7 @@ Experiment conducted by Hao Feng on 4th March 2021
 15:38:30 open (with the water)
 15:40:00 close
 
-15:51:00 open and take out the water
-15:52:30 closed 
+16:51:00 open and take out the water
+16:52:30 closed 
 
 
