@@ -35,7 +35,7 @@ class TestKalmanFilter(CLIModeTest):
         # System state
         measurements_T = data["average_temperature"].to_numpy()
 
-        std_dev = 0.00001
+        std_dev = 0.001
 
         params = four_param_model_params
         C_air_num = params[0]
