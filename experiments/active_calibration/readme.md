@@ -1,0 +1,12 @@
+#Active Calibration
+Once a model has been created with X free parameters it is time to perform an active calibration.
+
+An active calibration consists of the following steps
+1. Transfer PT calibration sequence to the PT
+1. Start the CSV recorder
+1. Execute the calibration script on the PT. 
+1. At this point there is a CSV file containing data of the actual PT behaviour.
+1. Run the model calibration in order to obtain the values of the parameters.
+1. Tag these parameter values in the traceability database.
+
+All of these actions are stubbed in active_calibration.py
