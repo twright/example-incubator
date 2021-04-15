@@ -1,7 +1,7 @@
 # The Incubator Case Study
 
 The overall purpose of the system is to reach a certain temperature within a box and keep the temperature regardless of content.
-![Incubator](figures/system.png)
+![Incubator](docs/figures/system.png)
 
 An introduction to the incubator case study is given in the following publication: TODO
 and the up-to-date documentation in generated in the docs folder.
@@ -34,7 +34,7 @@ Run/Read the script [./run_tests.ps1](./run_tests.ps1)
 
 # Creating Unit Tests
 
-Follow the example of [./tests/example_test.py](./tests/example_test.py)
+Follow the example of [./tests/example_test.py](software/tests/example_test.py)
 
 Each test should correspond to one experiment, and each experiment should be targeted at answering one question.
 

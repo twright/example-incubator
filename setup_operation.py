@@ -128,9 +128,10 @@ setup(
     #
     #   py_modules=["my_module"],
     #
-    packages=find_packages(include=["physical_twin.operation",
-                                    "communication.server",
-                                    "communication.shared",
+    packages=find_packages(include=["physical.software.controller1",
+                                    "physical.software.protocol",
+                                    "communication.communication",
+                                    "communication.protocol",
                                     "config"]),  # Required
 
     # Specify which Python versions you support. In contrast to the
@@ -159,7 +160,7 @@ setup(
     # projects.
     extras_require={  # Optional
         'dev': ['check-manifest'],
-        'test': ['coverage'],
+        'tests': ['coverage'],
     },
 
     # If there are data files included in your packages that need to be
@@ -186,7 +187,7 @@ setup(
     # executes the function `main` from this package when invoked:
      entry_points={  # Optional
          'console_scripts': [
-             'cli=physical_twin.operation:main',
+             'cli=physical.software.controller1:main',
          ],
      },
 

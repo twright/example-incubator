@@ -6,6 +6,8 @@ An active calibration consists of the following steps
 1. Start the CSV recorder
 1. Execute the calibration script on the PT. 
 1. At this point there is a CSV file containing data of the actual PT behaviour.
+And the data is stored for future usage.
+And the data is tagged in the traceability database.
 1. Run the model calibration in order to obtain the values of the parameters.
 1. Tag these parameter values in the traceability database.
 
