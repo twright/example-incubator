@@ -6,7 +6,7 @@ import pandas
 
 from config.config import resource_file_path
 from data_processing.data_processing import load_data
-from monitoring.kalman_filter_4p import KalmanFilter4P
+from models.state_estimation_models.kalman_filter_4p import KalmanFilter4P
 from models.plant_models.model_functions import run_experiment_four_parameter_model
 from visualization.data_plotting import plotly_incubator_data, show_plotly
 from tests.cli_mode_test import CLIModeTest
