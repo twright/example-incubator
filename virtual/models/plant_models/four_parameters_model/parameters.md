@@ -1,0 +1,4 @@
+- G_box: Energy transferred from the room to the box. (Unit: JK^-1)
+- G_heater: Energy transferred from the heatbed to the air. (Unit: JK^-1)
+- C_air: Heat capacity of air inside the box * mass of air inside the box. (Unit: JK^-1)
+- C_heater: Heat capacity of the heater * volume of the heater. (Unit: JK^-1)

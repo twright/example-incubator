@@ -6,9 +6,9 @@ https://github.com/pypa/sampleproject
 
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
-import pathlib
+from pathlib import Path
 
-here = pathlib.Path(__file__).parent.resolve()
+here = Path(__file__).parent.resolve()
 
 # Get the long description from the README file
 long_description = (here / 'README.md').read_text(encoding='utf-8')
@@ -28,7 +28,7 @@ setup(
     # There are some restrictions on what makes a valid project name
     # specification here:
     # https://packaging.python.org/specifications/core-metadata/#name
-    name='incubator',  # Required
+    name='incubator-deploy-operation',  # Required
 
     # Versions should comply with PEP 440:
     # https://www.python.org/dev/peps/pep-0440/
@@ -36,7 +36,7 @@ setup(
     # For a discussion on single-sourcing the version across setup.py and the
     # project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.0.0',  # Required
+    version='0.0.1',  # Required
 
     # This is a one-line description or tagline of what your project does. This
     # corresponds to the "Summary" metadata field:
@@ -128,7 +128,11 @@ setup(
     #
     #   py_modules=["my_module"],
     #
-    packages=find_packages(where='.'),  # Required
+    packages=find_packages(include=["physical.software.controller1",
+                                    "physical.software.protocol",
+                                    "communication.communication",
+                                    "communication.protocol",
+                                    "config"]),  # Required
 
     # Specify which Python versions you support. In contrast to the
     # 'Programming Language' classifiers above, 'pip install' will check this
@@ -142,7 +146,9 @@ setup(
     #
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['gpiozero', 'pika', 'pyhocon','argparse'],  # Optional
+    install_requires=[
+        'gpiozero==1.5.1'
+    ],  # Optional
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). Users will be able to install these using the "extras"
@@ -179,11 +185,11 @@ setup(
     #
     # For example, the following would provide a command called `sample` which
     # executes the function `main` from this package when invoked:
-    # entry_points={  # Optional
-    #     'console_scripts': [
-    #         'cli=isoxmlviz:main',
-    #     ],
-    # },
+     entry_points={  # Optional
+         'console_scripts': [
+             'cli=physical.software.controller1:main',
+         ],
+     },
 
     # List additional URLs that are relevant to your project as a dict.
     #
