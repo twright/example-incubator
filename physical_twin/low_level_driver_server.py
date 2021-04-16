@@ -1,6 +1,6 @@
 import logging
 import time
-
+from pathlib import Path
 from gpiozero import LED
 
 # Import parameters and shared stuff
@@ -155,11 +155,23 @@ class IncubatorDriver:
         else:
             return None
 
+def main():
+    import argparse
 
-if __name__ == '__main__':
+    options = argparse.ArgumentParser(prog="low_level_driver_server")
+    options.add_argument("-log", "--log-conf", dest="log_conf", type=str, required=False, help='Path to a log conf file',default="logging.conf")
+    options.add_argument("-c", "--conf", dest="conf", type=str, required=False,
+                         help='Path to the config file',default='startup.conf')
+    options.add_argument("-s","--simulation",type=bool,required=False,default=False)
+
+    args = options.parse_args()
+
+
+
     logging.basicConfig(level=logging.INFO)
-    config_logger("logging.conf")
-    config = load_config("startup.conf")
+    if Path(args.log_conf).exists():
+        config_logger(args.log_conf)
+    config = load_config(args.conf)
 
     incubator = IncubatorDriver(heater=Heater(12),
                                 fan=Fan(13),
@@ -167,6 +179,10 @@ if __name__ == '__main__':
                                 t2=TemperatureSensor("/sys/bus/w1/devices/10-0008039b25c1/w1_slave"),
                                 t3=TemperatureSensor("/sys/bus/w1/devices/10-0008039a977a/w1_slave"),
                                 rabbit_config=config["rabbitmq"],
-                                simulate_actuation=False)
+                                simulate_actuation=args.simulation)
     incubator.setup()
     incubator.control_loop()
+
+if __name__ == '__main__':
+    main()
+
