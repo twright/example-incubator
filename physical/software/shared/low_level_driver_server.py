@@ -1,12 +1,16 @@
 import logging
 import time
 from pathlib import Path
+
+from experiments.config.config import config_logger, load_config
 from gpiozero import LED
 
 # Import parameters and protocol stuff
-from software.src.shared.communication import Rabbitmq
+from physical.experiments.heater_and_heat_disipation_profiling.python_profiling_script import ROUTING_KEY_HEATER
+
 from physical.software.shared.sensor_actuator_layer import Heater, Fan, TemperatureSensor
-from experiments.config.config import config_logger, load_config
+from software.src.shared.communication.rabbitmq import Rabbitmq
+from software.src.shared.protocol.protocol import ROUTING_KEY_FAN, ROUTING_KEY_STATE
 
 
 class IncubatorDriver:
