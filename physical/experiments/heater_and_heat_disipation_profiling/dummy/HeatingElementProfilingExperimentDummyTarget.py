@@ -1,14 +1,9 @@
 
 from testcontainers.core.container import DockerContainer
-import socket
-from Experiments import OnTargetExperiment
-from incubator.physical.experiments.heater_and_heat_disipation_profiling.python_profiling_script  import experiment1
-from incubator.physical.experiments.heater_and_heat_disipation_profiling.heater_and_heat_disipation_profiling import HeatingElementProfilingExperiment
-from testcontainer_python_rabbitmq import RabbitMQContainer
+from physical.experiments.heater_and_heat_disipation_profiling.raspberry_pi.HeatingElementProfilingExperiment import HeatingElementProfilingExperiment
 import os
 import paramiko
-from scp import SCPClient
-from pathlib import Path
+
 
 class DockerContainerFromDockerfile(DockerContainer):
     '''Utilitty class to make a docker contain service from a docker file'''
