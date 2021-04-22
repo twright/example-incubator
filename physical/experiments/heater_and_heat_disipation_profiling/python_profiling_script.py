@@ -4,7 +4,7 @@ import json
 import time
 from csv import DictWriter
 import threading
-
+import time
 # message = {
 #     "measurement": "low_level_driver",
 #     "time": timestamp,
@@ -35,20 +35,28 @@ def experiment1(rabbitmq_host, rabbitmq_port):
                   "execution_interval", "elapsed"]
     defaults={ k:0 for k in fieldnames}
 
-    with open("output.csv", "w") as file:
+    with open("output-"+time.strftime("%Y%m%d-%H%M%S")+".csv", "w") as file:
         writer = DictWriter(file, fieldnames=sorted(defaults.keys()))
         writer.writeheader()
 
         def callback(ch, method, properties, body):
-            data = json.loads(body)
+            try:
+                data = json.loads(body)
+                print(data)
 
-            time = {"time": data["time"]}
-            fields = {attribute: value for attribute, value in data["fields"].items()}
-            fields.update(time)
-            kv=defaults.copy()
-            kv.update(fields)
+                time = {"time": data["time"]}
+                fields = {attribute: value for attribute, value in data["fields"].items() if attribute in fieldnames}
+                fields.update(time)
+                kv=defaults.copy()
+                kv.update(fields)
 
-            writer.writerow(kv)
+                writer.writerow(kv)
+                print(kv)
+                file.flush()
+            except Exception as err:
+                exception_type = type(err).__name__
+                print(exception_type)
+                print(err)
 
 
 
@@ -84,17 +92,21 @@ def experiment1(rabbitmq_host, rabbitmq_port):
         connection2 = pika.BlockingConnection(parameters)
         channel2 = connection2.channel()
         # record for 10s of current temp
-        time.sleep(1)
+        print("Initial wait")
+        time.sleep(10)
 
         # heat on for 30s
+        print("Heater on")
         channel2.basic_publish(exchange="Incubator_AMQP", routing_key=ROUTING_KEY_HEATER,
-                              body=json.dumps(True))
-        time.sleep(3)
+                              body=json.dumps({'heater':True}))
+        time.sleep(30)
+        print("Heater off")
         channel2.basic_publish(exchange="Incubator_AMQP", routing_key=ROUTING_KEY_HEATER,
-                              body=json.dumps(False))
+                              body=json.dumps({'heater':False}))
 
         # record 5 min
-        time.sleep(6 * 5)
+        print("Post measurement wait")
+        time.sleep(60 * 5)
 
         # ---------------- Experiment end-------------
 
