@@ -1,6 +1,8 @@
 import pika
 import logging
 
+from software.src.shared.protocol.protocol import encode_json, decode_json
+
 
 class Rabbitmq:
     def __init__(self, ip,
@@ -108,4 +110,7 @@ class Rabbitmq:
 
     def start_consuming(self):
         self.channel.start_consuming()
+
+    def stop_consuming(self):
+        self.channel.stop_consuming()
 
