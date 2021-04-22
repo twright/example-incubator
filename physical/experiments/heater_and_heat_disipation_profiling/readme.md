@@ -13,7 +13,7 @@ And the data is tagged in the traceability database.
 
 All of these actions are stubbed in active_calibration.py
 
-Expected parameters that can be derrived from the results are:
+Expected parameters that can be derived from the results are:
 
 - G_box: Energy transferred from the room to the box. (Unit: JK^-1)
 - G_heater: Energy transferred from the heatbed to the air. (Unit: JK^-1)
