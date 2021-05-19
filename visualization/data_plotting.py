@@ -75,6 +75,8 @@ def plotly_incubator_data(data, compare_to=None, heater_T_data=None, events=None
         for res in compare_to:
             if "T" in compare_to[res]:
                 fig.add_trace(go.Scatter(x=compare_to[res][time_field], y=compare_to[res]["T"], name=f"avg_temp({res})"), row=1, col=1)
+            if "T_object" in compare_to[res]:
+                fig.add_trace(go.Scatter(x=compare_to[res][time_field], y=compare_to[res]["T_object"], name=f"T_object({res})"), row=1, col=1)
 
     fig.add_trace(go.Scatter(x=data[time_field], y=data["t1"], name="room"), row=2, col=1)
 

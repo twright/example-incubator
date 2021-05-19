@@ -58,6 +58,41 @@ class TestPlotData(CLIModeTest):
         if self.ide_mode():
             show_plotly(fig)
 
+    def test_plot_mar_experiment(self):
+        time_unit = 'ns'
+        data = load_data("./datasets/lid_opening_experiment_mar_2021/lid_opening_experiment_mar_2021.csv",
+                         desired_timeframe=(- math.inf, math.inf),
+                         time_unit=time_unit,
+                         normalize_time=False,
+                         convert_to_seconds=True)
+        events = pandas.read_csv(resource_file_path("./datasets/lid_opening_experiment_mar_2021/events.csv"))
+        events["timestamp"] = pandas.to_datetime(events["time"], unit=time_unit)
+
+        if self.ide_mode():
+            print(f"Experiment time from {data.iloc[0]['timestamp']} to {data.iloc[-1]['timestamp']}")
+
+        params4pmodel = [145.69782402,  # C_air
+                         0.79154106,  # G_box
+                         227.76228512,  # C_heater
+                         1.92343277]  # G_heater
+        results4p, sol = run_experiment_four_parameter_model(data, params4pmodel)
+
+        fig = plotly_incubator_data(data,
+                                    compare_to={
+                                        "T(4)": {
+                                            "timestamp": pandas.to_datetime(results4p.signals["time"], unit='s'),
+                                            "T": results4p.signals["T"],
+                                        }
+                                    },
+                                    events=events,
+                                    overlay_heater=True,
+                                    # show_sensor_temperatures=True,
+                                    show_hr_time=True
+                                    )
+
+        if self.ide_mode():
+            show_plotly(fig)
+
 
 if __name__ == '__main__':
     unittest.main()

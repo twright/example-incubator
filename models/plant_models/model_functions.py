@@ -1,12 +1,15 @@
 import math
 
 import numpy
+import numpy as np
 from oomodelling.ModelSolver import ModelSolver
 
 import logging
 
 from data_processing.data_processing import load_data
 from models.plant_models.four_parameters_model.four_parameter_model import FourParameterIncubatorPlant
+from models.plant_models.globals import HEATER_VOLTAGE, HEATER_CURRENT
+from models.plant_models.seven_parameters_model.seven_parameter_model import SevenParameterIncubatorPlant
 from models.plant_models.two_parameters_model.two_parameter_model import TwoParameterIncubatorPlant
 
 l = logging.getLogger("Functions")
@@ -50,6 +53,27 @@ def create_lookup_table(time_range, data):
     return signal
 
 
+def convert_event_to_signal(time, events, categories, start):
+    """
+    Takes event data, that looks like this:
+        time,event,code
+        1614861060000000000,"Lid Opened", "lid_open"
+        1614861220000000000,"Lid Closed", "lid_close"
+    And produces an integer signal, where the values are given by the categories map.
+    """
+    last_value = categories[start]
+    event_idx = 0
+    signal = []
+    for t in time:
+        if t >= events.iloc[event_idx]["time"]:
+            last_value = categories[events.iloc[event_idx]["code"]]
+            event_idx += 1
+        signal.append(last_value)
+
+    assert len(signal) == len(time)
+
+    return np.array(signal)
+
 def run_experiment_two_parameter_model(data, params, h=3.0):
     C_air = params[0]
     G_box = params[1]
@@ -91,10 +115,46 @@ def run_experiment_four_parameter_model(data, params, h=3.0):
     return model, sol
 
 
+def run_experiment_seven_parameter_model(data, events, params, h=3.0):
+    C_air = params[0]
+    G_box = params[1]
+    C_heater = params[2]
+    G_heater = params[3]
+    C_object = params[4]
+    G_object = params[5]
+    G_open_lid = params[6]
+
+    initial_room_temperature = data.iloc[0]["t1"]
+    initial_box_temperature = data.iloc[0]["average_temperature"]
+    initial_heat_temperature = initial_room_temperature
+
+    model = SevenParameterIncubatorPlant(HEATER_VOLTAGE, HEATER_CURRENT,
+                                         initial_room_temperature, initial_box_temperature,
+                                         initial_heat_temperature,
+                                         C_air, G_box,
+                                         C_heater, G_heater,
+                                         C_object, G_object,
+                                         G_open_lid)
+
+    lid_open_signal = convert_event_to_signal(data["time"], events, categories={"lid_close": 0.0, "lid_open": 1.0},
+                                              start="lid_close")
+
+    in_heater_table = create_lookup_table(data["time"], data["heater_on"])
+    in_room_temperature = create_lookup_table(data["time"], data["t1"])
+    model.in_heater_on = lambda: in_heater_table(model.time())
+    model.in_room_temperature = lambda: in_room_temperature(model.time())
+
+    t0 = data.iloc[0]["time"]
+    tf = data.iloc[-1]["time"]
+    sol = ModelSolver().simulate(model, t0, tf, h, t_eval=data["time"])
+    return model, sol
+
+
 def construct_residual(experiments, run_exp=None, desired_timeframe=(-math.inf, math.inf), h=3.0):
     """
     run_exp is, for instance, run_experiment_four_parameter_model
     """
+
     def residual(params):
         errors = []
         for exp in experiments:
@@ -108,10 +168,10 @@ def construct_residual(experiments, run_exp=None, desired_timeframe=(-math.inf, 
             approx_T = state_over_time[T_indexes[0], :][0]
             T = data["average_temperature"].to_numpy()
             assert len(approx_T) == len(T), f"Inconsistent temperature arrays. One has {len(approx_T)} elements " \
-                                                    f"and the other one has {len(T)}. " \
-                                                    f"Their shapes are {approx_T.shape} and {T.shape}"
+                                            f"and the other one has {len(T)}. " \
+                                            f"Their shapes are {approx_T.shape} and {T.shape}"
             assert approx_T.shape == T.shape, f"Inconsistent temperature arrays. One has shape {approx_T.shape} elements " \
-                                                      f"and the other one has {T.shape}."
+                                              f"and the other one has {T.shape}."
             res = T - approx_T
             cost = sum(res ** 2)
             l.info(f"Parameters {params} -> Cost: {cost}")
