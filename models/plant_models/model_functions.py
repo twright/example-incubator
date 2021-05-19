@@ -43,6 +43,10 @@ def create_lookup_table(time_range, data):
     Uses the last_idx as a memory of the last request.
     Assumes that t is mostly increasing.
     """
+    assert type(time_range) is np.ndarray, "Recommended to use numpy arrays for performance reasons."
+    assert type(data) is np.ndarray, "Recommended to use numpy arrays for performance reasons."
+
+
     last_idx = 0
 
     def signal(t):
@@ -52,27 +56,6 @@ def create_lookup_table(time_range, data):
 
     return signal
 
-
-def convert_event_to_signal(time, events, categories, start):
-    """
-    Takes event data, that looks like this:
-        time,event,code
-        1614861060000000000,"Lid Opened", "lid_open"
-        1614861220000000000,"Lid Closed", "lid_close"
-    And produces an integer signal, where the values are given by the categories map.
-    """
-    last_value = categories[start]
-    event_idx = 0
-    signal = []
-    for t in time:
-        if t >= events.iloc[event_idx]["time"]:
-            last_value = categories[events.iloc[event_idx]["code"]]
-            event_idx += 1
-        signal.append(last_value)
-
-    assert len(signal) == len(time)
-
-    return np.array(signal)
 
 def run_experiment_two_parameter_model(data, params, h=3.0):
     C_air = params[0]
@@ -115,7 +98,9 @@ def run_experiment_four_parameter_model(data, params, h=3.0):
     return model, sol
 
 
-def run_experiment_seven_parameter_model(data, events, params, h=3.0):
+def run_experiment_seven_parameter_model(data, params,
+                                         initial_heat_temperature,
+                                         h=3.0):
     C_air = params[0]
     G_box = params[1]
     C_heater = params[2]
@@ -126,7 +111,6 @@ def run_experiment_seven_parameter_model(data, events, params, h=3.0):
 
     initial_room_temperature = data.iloc[0]["t1"]
     initial_box_temperature = data.iloc[0]["average_temperature"]
-    initial_heat_temperature = initial_room_temperature
 
     model = SevenParameterIncubatorPlant(HEATER_VOLTAGE, HEATER_CURRENT,
                                          initial_room_temperature, initial_box_temperature,
@@ -136,13 +120,14 @@ def run_experiment_seven_parameter_model(data, events, params, h=3.0):
                                          C_object, G_object,
                                          G_open_lid)
 
-    lid_open_signal = convert_event_to_signal(data["time"], events, categories={"lid_close": 0.0, "lid_open": 1.0},
-                                              start="lid_close")
+    time_array = data["time"].to_numpy()
 
-    in_heater_table = create_lookup_table(data["time"], data["heater_on"])
-    in_room_temperature = create_lookup_table(data["time"], data["t1"])
+    in_heater_table = create_lookup_table(time_array, data["heater_on"].to_numpy())
+    in_lid_open = create_lookup_table(time_array, data["lid_open"].to_numpy())
+    in_room_temperature = create_lookup_table(time_array, data["t1"].to_numpy())
     model.in_heater_on = lambda: in_heater_table(model.time())
     model.in_room_temperature = lambda: in_room_temperature(model.time())
+    model.in_lid_open = lambda: in_lid_open(model.time())
 
     t0 = data.iloc[0]["time"]
     tf = data.iloc[-1]["time"]
@@ -150,16 +135,15 @@ def run_experiment_seven_parameter_model(data, events, params, h=3.0):
     return model, sol
 
 
-def construct_residual(experiments, run_exp=None, desired_timeframe=(-math.inf, math.inf), h=3.0):
+def construct_residual(experiments):
     """
     run_exp is, for instance, run_experiment_four_parameter_model
     """
 
     def residual(params):
         errors = []
-        for exp in experiments:
-            data = derive_data(load_data(exp, desired_timeframe=desired_timeframe))
-            m, sol = run_exp(data, params, h=h)
+        for run_exp in experiments:
+            m, sol, data = run_exp(params)
             state_names = m.state_names()
             state_over_time = sol.y
 

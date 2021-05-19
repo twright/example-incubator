@@ -85,6 +85,12 @@ def plotly_incubator_data(data, compare_to=None, heater_T_data=None, events=None
     if show_actuators:
         fig.add_trace(go.Scatter(x=data[time_field], y=data["heater_on"], name="heater_on"), row=next_row, col=1)
         fig.add_trace(go.Scatter(x=data[time_field], y=data["fan_on"], name="fan_on"), row=next_row, col=1)
+
+        if compare_to is not None:
+            for res in compare_to:
+                if "in_lid_open" in compare_to[res]:
+                    fig.add_trace(go.Scatter(x=compare_to[res][time_field], y=compare_to[res]["in_lid_open"], name=f"in_lid_open({res})"), row=next_row, col=1)
+
         next_row += 1
 
     if heater_T_data is not None:

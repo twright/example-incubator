@@ -21,22 +21,22 @@ class SevenParameterIncubatorPlant(FourParameterIncubatorPlant):
         self.edit()  # Go into edit mode
 
         self.object_in = self.input(lambda: 0.0)
-        self.lid_open = self.input(lambda: 0.0)
+        self.in_lid_open = self.input(lambda: 0.0)
 
         self.C_object = self.parameter(C_object)
         self.G_object = self.parameter(G_object)
         self.G_open_lid = self.parameter(G_open_lid)
 
-        self.T_object = self.state(initial_room_temperature)
+        # self.T_object = self.state(initial_room_temperature)
 
-        self.power_transfer_object = self.var(lambda: self.object_in() * self.G_object * (self.T() - self.T_object()))
+        # self.power_transfer_object = self.var(lambda: self.object_in() * self.G_object * (self.T() - self.T_object()))
 
-        self.der('T_object', lambda: (1.0 / self.C_object) * (self.power_transfer_object()))
+        # self.der('T_object', lambda: (1.0 / self.C_object) * (self.power_transfer_object()))
 
         # Override equation of FourParameterIncubatorPlant
-        self.total_power_box = self.ovar(lambda: self.power_transfer_heat() - self.power_transfer_object() - self.power_out_box())
+        # self.total_power_box = self.ovar(lambda: self.power_transfer_heat() - self.power_transfer_object() - self.power_out_box())
 
         # Override equation of TwoParameterincubatorPlant
-        self.power_out_box = self.ovar(lambda: (self.G_box() + self.lid_open()*self.G_open_lid) * (self.T() - self.in_room_temperature()))
+        self.power_out_box = self.ovar(lambda: (((1-self.in_lid_open()) * self.G_box()) + self.in_lid_open() * self.G_open_lid) * (self.T() - self.in_room_temperature()))
 
         self.save()  # Close edit mode

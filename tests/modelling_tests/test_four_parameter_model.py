@@ -19,7 +19,8 @@ class FourParameterModelTests(CLIModeTest):
         logging.basicConfig(level=logging.WARN)
 
         experiments = [
-            "./datasets/controller_tunning/exp2_ht20_hg30.csv",
+            # "./datasets/controller_tunning/exp2_ht20_hg30.csv",
+            "./datasets/lid_opening_experiment_mar_2021/lid_opening_experiment_mar_2021.csv",
             # "./datasets/calibration_fan_24v/semi_random_movement.csv",
             # "./datasets/calibration_fan_12v/ramp_up_cool_down.csv",
             # "./datasets/calibration_fan_12v/random_on_off_sequences_1",
@@ -27,9 +28,10 @@ class FourParameterModelTests(CLIModeTest):
         ]
         params = four_param_model_params
 
-        tf = 1500 if self.ide_mode() else 30
+        tf = 1614861060000000000 - 1
 
         residual = construct_residual(experiments, run_exp=run_experiment_four_parameter_model,
+                                      time_unit='ns',
                                       desired_timeframe=(-math.inf, tf), h=6.0)
 
         print(leastsq(residual, params, maxfev=NEvals))
@@ -37,10 +39,12 @@ class FourParameterModelTests(CLIModeTest):
     def test_run_experiment_four_parameter_model(self):
         params = four_param_model_params
         # CWD: Example_Digital-Twin_Incubator\software\
-        data = derive_data(load_data("./datasets/controller_tunning/exp2_ht20_hg30.csv",
-                         desired_timeframe=(-math.inf, math.inf)))
+        data = derive_data(load_data("./datasets/lid_opening_experiment_mar_2021/lid_opening_experiment_mar_2021.csv",
+                                     desired_timeframe=(-math.inf, 1614861060000000000 - 1),
+                                     time_unit='ns',
+                                     convert_to_seconds=True))
         results, sol = run_experiment_four_parameter_model(data, params)
-        
+
         fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1)
 
         ax1.plot(data["time"], data["t1"], label="t1")
@@ -72,7 +76,7 @@ class FourParameterModelTests(CLIModeTest):
         params = four_param_model_params
         # CWD: Example_Digital-Twin_Incubator\software\
         data = derive_data(load_data("./datasets/calibration_fan_24v/semi_random_movement.csv",
-                         desired_timeframe=(-math.inf, 2000)))
+                                     desired_timeframe=(-math.inf, 2000)))
 
         results_4p, sol = run_experiment_four_parameter_model(data, params)
 
