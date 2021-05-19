@@ -5,7 +5,7 @@ from oomodelling.ModelSolver import ModelSolver
 
 import logging
 
-from data_processing.data_processing import load_data
+from data_processing.data_processing import load_data, derive_data
 from models.plant_models.four_parameters_model.four_parameter_model import FourParameterIncubatorPlant
 from models.plant_models.two_parameters_model.two_parameter_model import TwoParameterIncubatorPlant
 
@@ -98,7 +98,7 @@ def construct_residual(experiments, run_exp=None, desired_timeframe=(-math.inf, 
     def residual(params):
         errors = []
         for exp in experiments:
-            data = load_data(exp, desired_timeframe=desired_timeframe)
+            data = derive_data(load_data(exp, desired_timeframe=desired_timeframe))
             m, sol = run_exp(data, params, h=h)
             state_names = m.state_names()
             state_over_time = sol.y

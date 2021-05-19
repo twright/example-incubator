@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import pandas
 
 from config.config import resource_file_path
-from data_processing.data_processing import load_data
+from data_processing.data_processing import load_data, derive_data
 from models.plant_models.model_functions import run_experiment_four_parameter_model
 from tests.cli_mode_test import CLIModeTest
 from visualization.data_plotting import plot_incubator_data, plotly_incubator_data, show_plotly
@@ -15,8 +15,8 @@ class TestPlotData(CLIModeTest):
 
     def test_plot_data_default_setup(self):
         # CWD: Example_Digital-Twin_Incubator\software\
-        data = load_data("./datasets/controller_tunning/exp1_ht3_hg2.csv",
-                         desired_timeframe=(- math.inf, math.inf))
+        data = derive_data(load_data("./datasets/controller_tunning/exp1_ht3_hg2.csv",
+                         desired_timeframe=(- math.inf, math.inf)))
 
         plot_incubator_data(data)
 
@@ -25,11 +25,11 @@ class TestPlotData(CLIModeTest):
 
     def test_plot_data_plotly(self):
         time_unit = 'ns'
-        data = load_data("./datasets/lid_opening_experiment_jan_2021/lid_opening_experiment_jan_2021.csv",
+        data = derive_data(load_data("./datasets/lid_opening_experiment_jan_2021/lid_opening_experiment_jan_2021.csv",
                          desired_timeframe=(- math.inf, math.inf),
                          time_unit=time_unit,
                          normalize_time=False,
-                         convert_to_seconds=True)
+                         convert_to_seconds=True))
         events = pandas.read_csv(resource_file_path("./datasets/lid_opening_experiment_jan_2021/events.csv"))
         events["timestamp"] = pandas.to_datetime(events["time"], unit=time_unit)
 

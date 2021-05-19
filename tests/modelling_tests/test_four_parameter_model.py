@@ -5,7 +5,7 @@ from scipy.optimize import leastsq
 import matplotlib.pyplot as plt
 import sympy as sp
 
-from data_processing.data_processing import load_data
+from data_processing.data_processing import load_data, derive_data
 from models.plant_models.four_parameters_model.best_parameters import four_param_model_params
 from models.plant_models.model_functions import construct_residual, run_experiment_four_parameter_model, \
     run_experiment_two_parameter_model
@@ -37,8 +37,8 @@ class FourParameterModelTests(CLIModeTest):
     def test_run_experiment_four_parameter_model(self):
         params = four_param_model_params
         # CWD: Example_Digital-Twin_Incubator\software\
-        data = load_data("./datasets/controller_tunning/exp2_ht20_hg30.csv",
-                         desired_timeframe=(-math.inf, math.inf))
+        data = derive_data(load_data("./datasets/controller_tunning/exp2_ht20_hg30.csv",
+                         desired_timeframe=(-math.inf, math.inf)))
         results, sol = run_experiment_four_parameter_model(data, params)
         
         fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1)
@@ -71,8 +71,8 @@ class FourParameterModelTests(CLIModeTest):
         # If you run this experiment with the C_heater=1e-2 and G_heater=1e-2, then you will get the two models being mostly equivalent.
         params = four_param_model_params
         # CWD: Example_Digital-Twin_Incubator\software\
-        data = load_data("./datasets/calibration_fan_24v/semi_random_movement.csv",
-                         desired_timeframe=(-math.inf, 2000))
+        data = derive_data(load_data("./datasets/calibration_fan_24v/semi_random_movement.csv",
+                         desired_timeframe=(-math.inf, 2000)))
 
         results_4p, sol = run_experiment_four_parameter_model(data, params)
 

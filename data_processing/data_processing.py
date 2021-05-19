@@ -34,7 +34,7 @@ def load_data(filepath, desired_timeframe=(- math.inf, math.inf), time_unit='s',
     indices = range(start_idx, end_idx + 1)
     csv = csv.iloc[indices]
 
-    return derive_data(csv)
+    return csv
 
 
 def convert_time_s_to_ns(timeseries):
