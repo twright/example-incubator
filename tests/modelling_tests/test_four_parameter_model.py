@@ -40,7 +40,7 @@ class FourParameterModelTests(CLIModeTest):
         data = load_data("./datasets/controller_tunning/exp2_ht20_hg30.csv",
                          desired_timeframe=(-math.inf, math.inf))
         results, sol = run_experiment_four_parameter_model(data, params)
-
+        
         fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1)
 
         ax1.plot(data["time"], data["t1"], label="t1")
