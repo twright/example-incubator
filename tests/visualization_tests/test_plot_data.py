@@ -15,8 +15,8 @@ class TestPlotData(CLIModeTest):
 
     def test_plot_data_default_setup(self):
         # CWD: Example_Digital-Twin_Incubator\software\
-        data = derive_data(load_data("./datasets/controller_tunning/exp1_ht3_hg2.csv",
-                         desired_timeframe=(- math.inf, math.inf)))
+        data, _ = load_data("./datasets/controller_tunning/exp1_ht3_hg2.csv",
+                            desired_timeframe=(- math.inf, math.inf))
 
         plot_incubator_data(data)
 
@@ -26,19 +26,14 @@ class TestPlotData(CLIModeTest):
     def test_plot_data_plotly(self):
         time_unit = 'ns'
 
-        time_frame = (1614859007119846022, 1614861060000000000-1)
+        time_frame = (1614859007119846022, 1614861060000000000 - 1)
 
-        data = derive_data(load_data("./datasets/lid_opening_experiment_mar_2021/lid_opening_experiment_mar_2021.csv",
-                         desired_timeframe=time_frame,
-                         time_unit=time_unit,
-                         normalize_time=False,
-                         convert_to_seconds=True))
-
-        events = load_data("./datasets/lid_opening_experiment_mar_2021/events.csv",
-                           desired_timeframe=time_frame,
-                           time_unit=time_unit,
-                           normalize_time=False,
-                           convert_to_seconds=True)
+        data, events = load_data("./datasets/lid_opening_experiment_mar_2021/lid_opening_experiment_mar_2021.csv",
+                                 events="./datasets/lid_opening_experiment_mar_2021/events.csv",
+                                 desired_timeframe=time_frame,
+                                 time_unit=time_unit,
+                                 normalize_time=False,
+                                 convert_to_seconds=True)
 
         if self.ide_mode():
             print(f"Experiment time from {data.iloc[0]['timestamp']} to {data.iloc[-1]['timestamp']}")
@@ -68,13 +63,12 @@ class TestPlotData(CLIModeTest):
 
     def test_plot_mar_experiment(self):
         time_unit = 'ns'
-        data = load_data("./datasets/lid_opening_experiment_mar_2021/lid_opening_experiment_mar_2021.csv",
-                         desired_timeframe=(- math.inf, math.inf),
-                         time_unit=time_unit,
-                         normalize_time=False,
-                         convert_to_seconds=True)
-        events = pandas.read_csv(resource_file_path("./datasets/lid_opening_experiment_mar_2021/events.csv"))
-        events["timestamp"] = pandas.to_datetime(events["time"], unit=time_unit)
+        data, events = load_data("./datasets/lid_opening_experiment_mar_2021/lid_opening_experiment_mar_2021.csv",
+                                 events="./datasets/lid_opening_experiment_mar_2021/events.csv",
+                                 desired_timeframe=(- math.inf, math.inf),
+                                 time_unit=time_unit,
+                                 normalize_time=False,
+                                 convert_to_seconds=True)
 
         if self.ide_mode():
             print(f"Experiment time from {data.iloc[0]['timestamp']} to {data.iloc[-1]['timestamp']}")

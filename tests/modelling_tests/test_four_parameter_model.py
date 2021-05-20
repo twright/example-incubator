@@ -12,37 +12,42 @@ from models.plant_models.model_functions import construct_residual, run_experime
 from tests.cli_mode_test import CLIModeTest
 
 
+l = logging.getLogger("SevenParameterModelTests")
+
+
 class FourParameterModelTests(CLIModeTest):
+
+    def setUp(self) -> None:
+        logging.basicConfig(level=(logging.INFO if self.ide_mode() else logging.WARN))
 
     def test_calibrate_four_parameter_model(self):
         NEvals = 100 if self.ide_mode() else 1
-        logging.basicConfig(level=logging.WARN)
 
-        experiments = [
-            # "./datasets/controller_tunning/exp2_ht20_hg30.csv",
-            "./datasets/lid_opening_experiment_mar_2021/lid_opening_experiment_mar_2021.csv",
-            # "./datasets/calibration_fan_24v/semi_random_movement.csv",
-            # "./datasets/calibration_fan_12v/ramp_up_cool_down.csv",
-            # "./datasets/calibration_fan_12v/random_on_off_sequences_1",
-            # "./datasets/calibration_fan_12v/random_on_off_sequences_2"
-        ]
+
         params = four_param_model_params
 
-        tf = 1614861060000000000 - 1
+        data, _ = load_data("./datasets/controller_tunning/exp2_ht20_hg30.csv",
+                            time_unit='s',
+                            normalize_time=False,
+                            convert_to_seconds=False)
 
-        residual = construct_residual(experiments, run_exp=run_experiment_four_parameter_model,
-                                      time_unit='ns',
-                                      desired_timeframe=(-math.inf, tf), h=6.0)
+        h = 6.0
 
-        print(leastsq(residual, params, maxfev=NEvals))
+        def run_exp(params):
+            m, sol = run_experiment_four_parameter_model(data, params, h=h)
+            return m, sol, data
+
+        residual = construct_residual([run_exp])
+
+        l.info(leastsq(residual, params, maxfev=NEvals))
 
     def test_run_experiment_four_parameter_model(self):
         params = four_param_model_params
         # CWD: Example_Digital-Twin_Incubator\software\
-        data = derive_data(load_data("./datasets/lid_opening_experiment_mar_2021/lid_opening_experiment_mar_2021.csv",
+        data, _ = load_data("./datasets/controller_tunning/exp2_ht20_hg30.csv",
                                      desired_timeframe=(-math.inf, 1614861060000000000 - 1),
                                      time_unit='ns',
-                                     convert_to_seconds=True))
+                                     convert_to_seconds=True)
         results, sol = run_experiment_four_parameter_model(data, params)
 
         fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1)
@@ -75,8 +80,8 @@ class FourParameterModelTests(CLIModeTest):
         # If you run this experiment with the C_heater=1e-2 and G_heater=1e-2, then you will get the two models being mostly equivalent.
         params = four_param_model_params
         # CWD: Example_Digital-Twin_Incubator\software\
-        data = derive_data(load_data("./datasets/calibration_fan_24v/semi_random_movement.csv",
-                                     desired_timeframe=(-math.inf, 2000)))
+        data, _ = load_data("./datasets/calibration_fan_24v/semi_random_movement.csv",
+                                     desired_timeframe=(-math.inf, math.inf))
 
         results_4p, sol = run_experiment_four_parameter_model(data, params)
 

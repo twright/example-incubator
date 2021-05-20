@@ -17,29 +17,34 @@ import sympy as sp
 class TestsModelling(CLIModeTest):
 
     def test_calibrate_two_parameter_model(self):
-        NEvals = 1
+        NEvals = 100 if self.ide_mode() else 1
         logging.basicConfig(level=logging.INFO)
 
         # CWD: Example_Digital-Twin_Incubator\software\
-        experiments = [
-            "./datasets/calibration_fan_24v/semi_random_movement.csv",
-            # "./datasets/calibration_fan_12v/random_on_off_sequences",
-            # "./datasets/calibration_fan_12v/random_on_off_sequences_1",
-            # "./datasets/calibration_fan_12v/random_on_off_sequences_2"
-            ]
+
+        data, _ = load_data("./datasets/calibration_fan_24v/semi_random_movement.csv",
+                            time_unit='s',
+                            normalize_time=False,
+                            convert_to_seconds=False)
+
         params = two_param_model_params
 
-        residual = construct_residual(experiments,
-                                      run_exp=run_experiment_two_parameter_model,
-                                      desired_timeframe=(-math.inf, 750))
+        h = 3.0
 
-        print(leastsq(residual, params, maxfev=NEvals))
+        def run_exp(params):
+            m, sol = run_experiment_two_parameter_model(data, params, h=h)
+            return m, sol, data
+
+        residual = construct_residual([run_exp])
+
+        if self.ide_mode():
+            print(leastsq(residual, params, maxfev=NEvals))
 
     def test_run_experiment_two_parameter_model(self):
         params = two_param_model_params
         # CWD: Example_Digital-Twin_Incubator\software\
-        data = derive_data(load_data("./datasets/calibration_fan_24v/semi_random_movement.csv",
-                                     desired_timeframe=(-math.inf, 4000)))
+        data, _ = load_data("./datasets/calibration_fan_24v/semi_random_movement.csv",
+                                     desired_timeframe=(-math.inf, math.inf))
         results, sol = run_experiment_two_parameter_model(data, params)
 
         fig, (ax1, ax2, ax4) = plt.subplots(3, 1)
@@ -61,12 +66,13 @@ class TestsModelling(CLIModeTest):
         ax4.plot(results.signals["time"], results.signals["power_in"], label="~power_in")
         ax4.legend()
 
-        # plt.show()
+        if self.ide_mode():
+            plt.show()
 
     def test_check_two_parameter_model_inputs(self):
         params = two_param_model_params
         # CWD: Example_Digital-Twin_Incubator\software\
-        data = derive_data(load_data("./datasets/calibration_fan_12v/random_on_off_sequences.csv"))
+        data, _ = load_data("./datasets/calibration_fan_12v/random_on_off_sequences.csv")
         results, sol = run_experiment_two_parameter_model(data, params, h=3.0)
 
         fig, (ax1, ax2, ax4) = plt.subplots(3, 1)

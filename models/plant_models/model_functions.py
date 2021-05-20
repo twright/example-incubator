@@ -65,8 +65,10 @@ def run_experiment_two_parameter_model(data, params, h=3.0):
                                        initial_box_temperature=data.iloc[0]["average_temperature"],
                                        C_air=C_air, G_box=G_box)
 
-    in_heater_table = create_lookup_table(data["time"], data["heater_on"])
-    in_room_temperature = create_lookup_table(data["time"], data["t1"])
+    time_range = data["time"].to_numpy()
+
+    in_heater_table = create_lookup_table(time_range, data["heater_on"].to_numpy())
+    in_room_temperature = create_lookup_table(time_range, data["t1"].to_numpy())
     model.in_heater_on = lambda: in_heater_table(model.time())
     model.in_room_temperature = lambda: in_room_temperature(model.time())
 
@@ -87,14 +89,16 @@ def run_experiment_four_parameter_model(data, params, h=3.0):
                                         C_air=C_air, G_box=G_box,
                                         C_heater=C_heater, G_heater=G_heater)
 
-    in_heater_table = create_lookup_table(data["time"], data["heater_on"])
-    in_room_temperature = create_lookup_table(data["time"], data["t1"])
+    time_range = data["time"].to_numpy()
+
+    in_heater_table = create_lookup_table(time_range, data["heater_on"].to_numpy())
+    in_room_temperature = create_lookup_table(time_range, data["t1"].to_numpy())
     model.in_heater_on = lambda: in_heater_table(model.time())
     model.in_room_temperature = lambda: in_room_temperature(model.time())
 
     t0 = data.iloc[0]["time"]
     tf = data.iloc[-1]["time"]
-    sol = ModelSolver().simulate(model, t0, tf, h, t_eval=data["time"])
+    sol = ModelSolver().simulate(model, t0, tf, h, t_eval=time_range)
     return model, sol
 
 
@@ -120,11 +124,11 @@ def run_experiment_seven_parameter_model(data, params,
                                          C_object, G_object,
                                          G_open_lid)
 
-    time_array = data["time"].to_numpy()
+    time_range = data["time"].to_numpy()
 
-    in_heater_table = create_lookup_table(time_array, data["heater_on"].to_numpy())
-    in_lid_open = create_lookup_table(time_array, data["lid_open"].to_numpy())
-    in_room_temperature = create_lookup_table(time_array, data["t1"].to_numpy())
+    in_heater_table = create_lookup_table(time_range, data["heater_on"].to_numpy())
+    in_lid_open = create_lookup_table(time_range, data["lid_open"].to_numpy())
+    in_room_temperature = create_lookup_table(time_range, data["t1"].to_numpy())
     model.in_heater_on = lambda: in_heater_table(model.time())
     model.in_room_temperature = lambda: in_room_temperature(model.time())
     model.in_lid_open = lambda: in_lid_open(model.time())

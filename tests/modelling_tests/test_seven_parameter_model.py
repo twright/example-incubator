@@ -14,14 +14,22 @@ from tests.cli_mode_test import CLIModeTest
 from visualization.data_plotting import plotly_incubator_data, show_plotly
 
 
+l = logging.getLogger("SevenParameterModelTests")
+
+
 class SevenParameterModelTests(CLIModeTest):
+
+    def setUp(self) -> None:
+        logging.basicConfig(level=(logging.INFO if self.ide_mode() else logging.WARN))
 
     def test_calibrate_seven_parameter_model(self):
 
         NEvals = 100 if self.ide_mode() else 1
-        logging.basicConfig(level=logging.INFO)
 
-        desired_timeframe = (-math.inf, 1614867211000000000-1)
+        added_cup_event_ts = 1614867211000000000
+        first_lid_open_event = 1614861060000000000
+
+        desired_timeframe = (-math.inf, added_cup_event_ts-1) if self.ide_mode() else (-math.inf, first_lid_open_event-1)
         time_unit = 'ns'
         convert_to_seconds = True
 
@@ -42,16 +50,15 @@ class SevenParameterModelTests(CLIModeTest):
         residual = construct_residual([run_exp])
         sol = least_squares(residual, np.array(seven_param_model_params), max_nfev=NEvals)
 
-        print(f"Cost: {sol.cost}")
-        print(f"Params: {sol.x}")
+        l.info(f"Cost: {sol.cost}")
+        l.info(f"Params: {sol.x}")
 
 
     def test_calibrate_seven_parameter_model_stages(self):
 
         NEvals = 50 if self.ide_mode() else 1
-        logging.basicConfig(level=logging.INFO)
 
-        NStages = 8
+        NStages = 8 if self.ide_mode() else 1
 
         desired_timeframe = (-math.inf, math.inf)
         time_unit = 'ns'
@@ -111,7 +118,7 @@ class SevenParameterModelTests(CLIModeTest):
 
                 params[6] = sol.x[0]
 
-                print(f"Calibration for stage {i} with lid open done.")
+                l.info(f"Calibration for stage {i} with lid open done.")
             else:
                 def run_exp_nolid(params_nolid):
                     params[0] = params_nolid[0]
@@ -129,17 +136,16 @@ class SevenParameterModelTests(CLIModeTest):
                 params[2] = sol.x[2]
                 params[3] = sol.x[3]
 
-                print(f"Calibration for stage {i} with no lid open done.")
+                l.info(f"Calibration for stage {i} with no lid open done.")
 
-            print(f"Cost: {sol.cost}")
-            print(f"Params: {sol.x}")
+            l.info(f"Cost: {sol.cost}")
+            l.info(f"Params: {sol.x}")
 
             experiments.append((data_stage, params, T_heater_0))
 
-        print(f"Calibration done. Final results:")
+        l.info(f"Calibration done. Final results:")
         (_, last_params, _) = experiments[-1]
-        print(last_params)
-
+        l.info(last_params)
 
     def test_run_experiment_seven_parameter_model(self):
         time_unit = 'ns'
@@ -158,8 +164,7 @@ class SevenParameterModelTests(CLIModeTest):
 
         results, sol = run_experiment_seven_parameter_model(data, params, initial_heat_temperature=data.iloc[0]["average_temperature"])
 
-        if self.ide_mode():
-            print(f"Experiment time from {data.iloc[0]['timestamp']} to {data.iloc[-1]['timestamp']}")
+        l.info(f"Experiment time from {data.iloc[0]['timestamp']} to {data.iloc[-1]['timestamp']}")
 
         fig = plotly_incubator_data(data,
                                     compare_to={
