@@ -24,7 +24,7 @@ def load_timestamped_data(filepath, desired_timeframe, time_unit, normalize_time
 
     if end_idx <= start_idx:
         print(
-            f"Warning: after trimming ended with start_idx={start_idx} and end_idx={end_idx}. This results in empty data")
+            f"Warning: after trimming ended up with start_idx={start_idx} and end_idx={end_idx}. This results in empty data")
         return None
 
     indices = range(start_idx, end_idx + 1)
