@@ -29,3 +29,9 @@ def from_ns_to_s(time_ns):
 
 def from_s_to_ns(time_s):
     return int(time_s * 1e9)
+
+
+def from_s_to_ns_array(time_s):
+    ns_floats = time_s * 1e9
+    ns_ints = ns_floats.astype(int)
+    return ns_ints
