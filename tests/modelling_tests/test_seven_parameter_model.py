@@ -10,6 +10,7 @@ from scipy.optimize import leastsq, least_squares
 from data_processing.data_processing import load_data, derive_data
 from models.plant_models.model_functions import run_experiment_seven_parameter_model, construct_residual
 from models.plant_models.seven_parameters_model.best_parameters import seven_param_model_params
+from physical_twin.low_level_driver_server import CTRL_EXEC_INTERVAL
 from tests.cli_mode_test import CLIModeTest
 from visualization.data_plotting import plotly_incubator_data, show_plotly
 
@@ -26,14 +27,17 @@ class SevenParameterModelTests(CLIModeTest):
 
         NEvals = 100 if self.ide_mode() else 1
 
+        guess = np.array(seven_param_model_params)
+        guess[0] = guess[0] if self.ide_mode() else guess[0] + 0.1 # Just to make the thing converge
+
         added_cup_event_ts = 1614867211000000000
         first_lid_open_event = 1614861060000000000
 
-        desired_timeframe = (-math.inf, added_cup_event_ts-1) if self.ide_mode() else (-math.inf, first_lid_open_event-1)
+        desired_timeframe = (-math.inf, added_cup_event_ts-1)
         time_unit = 'ns'
         convert_to_seconds = True
 
-        h = 3.0
+        h = CTRL_EXEC_INTERVAL
 
         data, events = load_data("./datasets/lid_opening_experiment_mar_2021/lid_opening_experiment_mar_2021.csv",
                                  events="./datasets/lid_opening_experiment_mar_2021/events.csv",
@@ -48,7 +52,8 @@ class SevenParameterModelTests(CLIModeTest):
             return m, sol, data
 
         residual = construct_residual([run_exp])
-        sol = least_squares(residual, np.array(seven_param_model_params), max_nfev=NEvals)
+
+        sol = least_squares(residual, guess, max_nfev=NEvals)
 
         l.info(f"Cost: {sol.cost}")
         l.info(f"Params: {sol.x}")
@@ -64,7 +69,7 @@ class SevenParameterModelTests(CLIModeTest):
         time_unit = 'ns'
         convert_to_seconds = True
 
-        h = 3.0
+        h = CTRL_EXEC_INTERVAL
 
         data, events = load_data("./datasets/lid_opening_experiment_mar_2021/lid_opening_experiment_mar_2021.csv",
                                  events="./datasets/lid_opening_experiment_mar_2021/events.csv",

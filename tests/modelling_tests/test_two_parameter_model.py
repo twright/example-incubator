@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from data_processing.data_processing import load_data, derive_data
 from models.plant_models.model_functions import construct_residual, run_experiment_two_parameter_model
 from models.plant_models.two_parameters_model.best_parameters import two_param_model_params
+from physical_twin.low_level_driver_server import CTRL_EXEC_INTERVAL
 from tests.cli_mode_test import CLIModeTest
 import sympy as sp
 
@@ -29,7 +30,7 @@ class TestsModelling(CLIModeTest):
 
         params = two_param_model_params
 
-        h = 3.0
+        h = CTRL_EXEC_INTERVAL
 
         def run_exp(params):
             m, sol = run_experiment_two_parameter_model(data, params, h=h)

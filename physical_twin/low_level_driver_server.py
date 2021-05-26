@@ -9,6 +9,8 @@ from communication.shared.protocol import *
 from physical_twin.sensor_actuator_layer import Heater, Fan, TemperatureSensor
 from config.config import config_logger, load_config
 
+CTRL_EXEC_INTERVAL = 3.0
+
 
 class IncubatorDriver:
     logger = logging.getLogger("Incubator")
@@ -56,7 +58,7 @@ class IncubatorDriver:
         self.fan.off()
         self.heater.off()
 
-    def control_loop(self, exec_interval=3, strict_interval=True):
+    def control_loop(self, exec_interval=CTRL_EXEC_INTERVAL, strict_interval=True):
         try:
             while True:
                 start = time.time()

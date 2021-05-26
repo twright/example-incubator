@@ -11,6 +11,7 @@ from models.plant_models.four_parameters_model.four_parameter_model import FourP
 from models.plant_models.globals import HEATER_VOLTAGE, HEATER_CURRENT
 from models.plant_models.seven_parameters_model.seven_parameter_model import SevenParameterIncubatorPlant
 from models.plant_models.two_parameters_model.two_parameter_model import TwoParameterIncubatorPlant
+from physical_twin.low_level_driver_server import CTRL_EXEC_INTERVAL
 
 l = logging.getLogger("Functions")
 
@@ -25,7 +26,7 @@ def find_closest_idx(t, start_idx, time_range):
     while time_range[idx] > t and idx > 0:
         idx = idx - 1
 
-    assert time_range[idx] <= t, f"{t}, {start_idx}, {idx}"
+    assert time_range[idx] <= t, f"{t}, {start_idx}, {idx}, {time_range[idx]}, {time_range[-1]}"
 
     # Search forward
     while (idx + 1) < maxIdx and time_range[idx + 1] <= t:
@@ -46,7 +47,6 @@ def create_lookup_table(time_range, data):
     assert type(time_range) is np.ndarray, "Recommended to use numpy arrays for performance reasons."
     assert type(data) is np.ndarray, "Recommended to use numpy arrays for performance reasons."
 
-
     last_idx = 0
 
     def signal(t):
@@ -57,7 +57,7 @@ def create_lookup_table(time_range, data):
     return signal
 
 
-def run_experiment_two_parameter_model(data, params, h=3.0):
+def run_experiment_two_parameter_model(data, params, h=CTRL_EXEC_INTERVAL):
     C_air = params[0]
     G_box = params[1]
 
@@ -78,7 +78,7 @@ def run_experiment_two_parameter_model(data, params, h=3.0):
     return model, sol
 
 
-def run_experiment_four_parameter_model(data, params, h=3.0):
+def run_experiment_four_parameter_model(data, params, h=CTRL_EXEC_INTERVAL):
     C_air = params[0]
     G_box = params[1]
     C_heater = params[2]
@@ -104,7 +104,7 @@ def run_experiment_four_parameter_model(data, params, h=3.0):
 
 def run_experiment_seven_parameter_model(data, params,
                                          initial_heat_temperature,
-                                         h=3.0):
+                                         h=CTRL_EXEC_INTERVAL):
     C_air = params[0]
     G_box = params[1]
     C_heater = params[2]

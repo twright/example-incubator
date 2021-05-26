@@ -8,6 +8,7 @@ from config.config import resource_file_path
 from data_processing.data_processing import load_data, derive_data
 from monitoring.kalman_filter_4p import KalmanFilter4P
 from models.plant_models.model_functions import run_experiment_four_parameter_model
+from physical_twin.low_level_driver_server import CTRL_EXEC_INTERVAL
 from visualization.data_plotting import plotly_incubator_data, show_plotly
 from tests.cli_mode_test import CLIModeTest
 from models.plant_models.four_parameters_model.best_parameters import four_param_model_params
@@ -16,7 +17,7 @@ from models.plant_models.four_parameters_model.best_parameters import four_param
 class TestKalmanFilter(CLIModeTest):
 
     def test_kalman_4_param_model(self):
-        data_sample_size = 3.0
+        data_sample_size = CTRL_EXEC_INTERVAL
 
         # Load the data
         time_unit = 'ns'
