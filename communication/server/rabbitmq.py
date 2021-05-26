@@ -88,11 +88,11 @@ class Rabbitmq:
             self.channel.queue_delete(queue=name)
 
     def close(self):
-        self._l.info("Deleting created queues by Rabbitmq class")
+        self._l.debug("Deleting created queues by Rabbitmq class")
         self.queues_delete()
-        self._l.info("Closing channel in rabbitmq")
+        self._l.debug("Closing channel in rabbitmq")
         self.channel.close()
-        self._l.info("Closing connection in rabbitmq")
+        self._l.debug("Closing connection in rabbitmq")
         self.connection.close()
 
     def subscribe(self, routing_key, on_message_callback):
