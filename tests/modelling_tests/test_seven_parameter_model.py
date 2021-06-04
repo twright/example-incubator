@@ -155,8 +155,7 @@ class SevenParameterModelTests(CLIModeTest):
     def test_run_experiment_seven_parameter_model(self):
         time_unit = 'ns'
 
-        tf = 1614867211000000000-1
-        # tf = math.inf
+        tf = math.inf if self.ide_mode() else 1614867211000000000-1
 
         # CWD: Example_Digital-Twin_Incubator\software\
         data, events = load_data("./datasets/lid_opening_experiment_mar_2021/lid_opening_experiment_mar_2021.csv",
