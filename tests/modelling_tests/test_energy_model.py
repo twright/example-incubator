@@ -1,38 +1,58 @@
-import logging
 import math
 import unittest
 
-import numpy
-import numpy as np
 from oomodelling import ModelSolver
-from scipy.optimize import leastsq
 
-import matplotlib.pyplot as plt
-
-from data_processing.data_processing import load_data, derive_data
+from data_processing.data_processing import load_data
 from models.plant_models.algebraic_models.energy_model import EnergyModel
-from models.plant_models.model_functions import construct_residual, run_experiment_two_parameter_model
-from models.plant_models.two_parameters_model.best_parameters import two_param_model_params
+from models.plant_models.model_functions import create_lookup_table
 from physical_twin.low_level_driver_server import CTRL_EXEC_INTERVAL
 from tests.cli_mode_test import CLIModeTest
-import sympy as sp
+from visualization.data_plotting import plotly_incubator_data, show_plotly
 
 
 class TestsModelling(CLIModeTest):
 
     def test_check_power_supply_enough(self):
-        model = EnergyModel()
-        t0 = 0.0
-        tf = 4.0
-        sol = ModelSolver().simulate(model, t0, tf, 0.1)
+        # CWD: Example_Digital-Twin_Incubator\software\
+        data, _ = load_data("./datasets/calibration_fan_24v/semi_random_movement.csv",
+                            time_unit='s',
+                            desired_timeframe=(-math.inf, math.inf),
+                            normalize_time=False,
+                            convert_to_seconds=False)
 
-        plt.figure()
+        model = EnergyModel(
+                            # initial_heat_current=0.6,
+                            T0=25.0)
 
-        plt.plot(model.signals["time"], model.signals["T"], label="T")
-        plt.legend()
+        time_range = data["time"].to_numpy()
+
+        in_heater_table = create_lookup_table(time_range, data["heater_on"].to_numpy())
+        model.in_heater_on = lambda: in_heater_table(model.time())
+
+        t0 = data.iloc[0]["time"]
+        tf = data.iloc[-1]["time"]
+
+        ModelSolver().simulate(model, t0, tf, CTRL_EXEC_INTERVAL, t_eval=data["time"])
+
+        fig = plotly_incubator_data(data,
+                                    compare_to={
+                                        "T(1)": {
+                                            "time": model.signals["time"],
+                                            "timestamp": model.signals["time"],
+                                            "T": model.signals["T"],
+                                        }
+                                    },
+                                    # events=events,
+                                    overlay_heater=True,
+                                    # show_sensor_temperatures=True,
+                                    show_hr_time=False
+                                    )
 
         if self.ide_mode():
-            plt.show()
+            show_plotly(fig)
+
+
 
 if __name__ == '__main__':
     unittest.main()
