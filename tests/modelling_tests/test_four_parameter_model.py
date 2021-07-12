@@ -9,6 +9,7 @@ from data_processing.data_processing import load_data, derive_data
 from models.plant_models.four_parameters_model.best_parameters import four_param_model_params
 from models.plant_models.model_functions import construct_residual, run_experiment_four_parameter_model, \
     run_experiment_two_parameter_model
+from models.plant_models.two_parameters_model.best_parameters import two_param_model_params
 from tests.cli_mode_test import CLIModeTest
 
 
@@ -87,6 +88,7 @@ class FourParameterModelTests(CLIModeTest):
 
         params = [616.56464029,  # C_air
                   0.65001889]  # G_box
+        params = two_param_model_params
 
         results_2p, sol = run_experiment_two_parameter_model(data, params)
 

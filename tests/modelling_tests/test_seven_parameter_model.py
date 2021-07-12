@@ -8,7 +8,9 @@ import pandas
 from scipy.optimize import leastsq, least_squares
 
 from data_processing.data_processing import load_data, derive_data
-from models.plant_models.model_functions import run_experiment_seven_parameter_model, construct_residual
+from models.plant_models.four_parameters_model.best_parameters import four_param_model_params
+from models.plant_models.model_functions import run_experiment_seven_parameter_model, construct_residual, \
+    run_experiment_four_parameter_model
 from models.plant_models.seven_parameters_model.best_parameters import seven_param_model_params
 from physical_twin.low_level_driver_server import CTRL_EXEC_INTERVAL
 from tests.cli_mode_test import CLIModeTest
@@ -168,15 +170,21 @@ class SevenParameterModelTests(CLIModeTest):
 
         results, sol = run_experiment_seven_parameter_model(data, params, initial_heat_temperature=data.iloc[0]["average_temperature"])
 
+        results_4, sol_4 = run_experiment_four_parameter_model(data, four_param_model_params)
+
         l.info(f"Experiment time from {data.iloc[0]['timestamp']} to {data.iloc[-1]['timestamp']}")
 
         fig = plotly_incubator_data(data,
                                     compare_to={
-                                        "T(4)": {
+                                        "T(7)": {
                                             "timestamp": pandas.to_datetime(results.signals["time"], unit='s'),
                                             "T": results.signals["T"],
                                             # "T_object": results.signals["T_object"],
                                             "in_lid_open": results.signals["in_lid_open"],
+                                        },
+                                        "T(4)": {
+                                            "timestamp": pandas.to_datetime(results_4.signals["time"], unit='s'),
+                                            "T": results_4.signals["T"]
                                         }
                                     },
                                     events=events,

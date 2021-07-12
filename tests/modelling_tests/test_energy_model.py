@@ -1,6 +1,7 @@
 import math
 import unittest
 
+from matplotlib import pyplot as plt
 from oomodelling import ModelSolver
 
 from data_processing.data_processing import load_data
@@ -14,6 +15,27 @@ from visualization.data_plotting import plotly_incubator_data, show_plotly
 class TestsModelling(CLIModeTest):
 
     def test_check_power_supply_enough(self):
+        model = EnergyModel(initial_heat_voltage=10.0, initial_heat_current=10.0)
+        model.in_heater_on = lambda: True
+        t0 = 0.0
+        tf = 5.0
+        sol = ModelSolver().simulate(model, t0, tf, 0.1)
+
+        plt.figure()
+
+        plt.plot(model.signals["time"], model.signals["T"], label="T")
+        plt.legend()
+
+
+        plt.figure()
+
+        plt.plot(model.signals["time"], model.signals["energy"], label="T")
+        plt.legend()
+
+        if self.ide_mode():
+            plt.show()
+
+    def test_compare_guesses_with_reality(self):
         # CWD: Example_Digital-Twin_Incubator\software\
         data, _ = load_data("./datasets/calibration_fan_24v/semi_random_movement.csv",
                             time_unit='s',
@@ -22,8 +44,8 @@ class TestsModelling(CLIModeTest):
                             convert_to_seconds=False)
 
         model = EnergyModel(
-                            # initial_heat_current=0.6,
-                            T0=25.0)
+            # initial_heat_current=0.6,
+            T0=25.0)
 
         time_range = data["time"].to_numpy()
 
@@ -51,6 +73,8 @@ class TestsModelling(CLIModeTest):
 
         if self.ide_mode():
             show_plotly(fig)
+
+
 
 
 
