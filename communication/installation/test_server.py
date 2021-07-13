@@ -10,11 +10,11 @@ if __name__ == '__main__':
     config_logger("logging.conf")
     config = load_config("startup.conf")
 
-    receiver = Rabbitmq(**config)
+    receiver = Rabbitmq(**config["rabbitmq"])
     receiver.connect_to_server()
     qname = receiver.declare_local_queue(routing_key="test")
 
-    sender = Rabbitmq(**config)
+    sender = Rabbitmq(**config["rabbitmq"])
     sender.connect_to_server()
     sender.send_message(routing_key="test", message={"text": "321"})
 
