@@ -35,13 +35,13 @@ def plotly_incubator_data(data, compare_to=None, heater_T_data=None, events=None
                           overlay_heater=True, show_actuators=False, show_sensor_temperatures=False,
                           show_hr_time=False):
     nRows = 2
-    titles = ["Incubator Temperature", "Room Temperature"]
+    titles = ["Incubator Temperature (°C)", "Room Temperature (°C)"]
     if show_actuators:
         nRows += 1
-        titles += "Actuators"
+        titles.append("Actuators")
     if heater_T_data is not None:
         nRows += 1
-        titles += "Heatbed Temperature"
+        titles.append("Heatbed Temperature (°C)")
 
     x_title = "Timestamp" if show_hr_time else "Time (s)"
 

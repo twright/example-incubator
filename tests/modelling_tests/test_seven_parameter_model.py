@@ -10,8 +10,9 @@ from scipy.optimize import leastsq, least_squares
 from data_processing.data_processing import load_data, derive_data
 from models.plant_models.four_parameters_model.best_parameters import four_param_model_params
 from models.plant_models.model_functions import run_experiment_seven_parameter_model, construct_residual, \
-    run_experiment_four_parameter_model
+    run_experiment_four_parameter_model, run_experiment_two_parameter_model
 from models.plant_models.seven_parameters_model.best_parameters import seven_param_model_params
+from models.plant_models.two_parameters_model.best_parameters import two_param_model_params
 from physical_twin.low_level_driver_server import CTRL_EXEC_INTERVAL
 from tests.cli_mode_test import CLIModeTest
 from visualization.data_plotting import plotly_incubator_data, show_plotly
@@ -158,6 +159,7 @@ class SevenParameterModelTests(CLIModeTest):
         time_unit = 'ns'
 
         tf = math.inf if self.ide_mode() else 1614867211000000000-1
+        tf = 1614867210000000000 + 1 if self.ide_mode() else 1614867211000000000 - 1
 
         # CWD: Example_Digital-Twin_Incubator\software\
         data, events = load_data("./datasets/lid_opening_experiment_mar_2021/lid_opening_experiment_mar_2021.csv",
@@ -172,6 +174,8 @@ class SevenParameterModelTests(CLIModeTest):
 
         results_4, sol_4 = run_experiment_four_parameter_model(data, four_param_model_params)
 
+        results_2p, sol_2p = run_experiment_two_parameter_model(data, two_param_model_params)
+
         l.info(f"Experiment time from {data.iloc[0]['timestamp']} to {data.iloc[-1]['timestamp']}")
 
         fig = plotly_incubator_data(data,
@@ -185,16 +189,21 @@ class SevenParameterModelTests(CLIModeTest):
                                         "T(4)": {
                                             "timestamp": pandas.to_datetime(results_4.signals["time"], unit='s'),
                                             "T": results_4.signals["T"]
+                                        },
+                                        "T(2)": {
+                                            "timestamp": pandas.to_datetime(results_2p.signals["time"], unit='s'),
+                                            "T": results_2p.signals["T"]
                                         }
                                     },
                                     events=events,
-                                    overlay_heater=True,
+                                    overlay_heater=False,
                                     show_actuators=True,
                                     show_hr_time=True
                                     )
 
         if self.ide_mode():
             show_plotly(fig)
+            # fig.write_image("lid_opening_experiment_mar_2p_4p_7p.svg")
 
 
 if __name__ == '__main__':
