@@ -2,4 +2,4 @@
 $Env:CLIMODE = "ON"
 
 # Run unittest in discovery mode for the tests folder
-& python -m unittest discover -v tests -p "*.py"
+& pipenv run python -m unittest discover -v tests -p "*.py"
