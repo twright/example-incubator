@@ -10,20 +10,31 @@ and the up-to-date documentation in generated in the docs folder.
 
 Run/Read the script [./docs/build_docs.ps1](./docs/build_docs.ps1)
 
+# pipenv primer
+PIPENV is the recommended packaging tool from [python.org](https://packaging.python.org/guides/tool-recommendations/#application-dependency-management)
+
+To execute a Python script prefix it with `pipenv run`. I.e. `pipenv run python test.py`
+
+Alternatively, start a shell with the pipenv wth `pipenv shell`.  
+Within this shell, one can directly use i.e. `python test.py`
+
+To install a new package use `pipenv install PACKAGE`
+
+To ensure your local development environment will be same as the deployed lock the pipefile with `pipenv lock`
+
 # Running the Unit Tests
 
 ## First-time setup
 1. Open terminal in this folder.
-2. Optional: create a virtual environment: `python -m venv venv`
-3. Optional: activate the virtual environment (there are multiple possible activate scripts. Pick the one for your command line interface): 
-   1. Windows Powershell:`.\venv\Scripts\Activate.ps1` 
-   2. Linux/Mac: `source venv/bin/activate`
-4. Install dependencies:
-   1. `pip install -r ./requirements.txt`.
+1. Install pipenv: `pip install pipenv`
+1. Install from pipfile: `pipenv install`
+
 
 ## After first time setup
 
-Run/Read the script [./run_tests.ps1](./run_tests.ps1)
+Run/Read the script [./run_tests.ps1](./run_tests.ps1) for windows or [./run_tests.sh](./run_tests.sh) for UNIX 
+
+Or execute `pipenv `
 
 # Handling Datasets
 
