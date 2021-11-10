@@ -9,7 +9,7 @@ class SystemModel4Parameters(Model):
                  G_box,
                  C_heater,
                  G_heater,
-                 lower_bound=10, heating_time=20.0, heating_gap=30.0,
+                 lower_bound=10, heating_time=20, heating_gap=30,
                  temperature_desired=35,
                  initial_box_temperature=35,
                  initial_heat_temperature=35):

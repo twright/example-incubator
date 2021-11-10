@@ -5,7 +5,7 @@ import logging
 
 from communication.server.rabbitmq import Rabbitmq, ROUTING_KEY_STATE, ROUTING_KEY_HEATER, ROUTING_KEY_FAN, decode_json, \
     from_ns_to_s, ROUTING_KEY_CONTROLLER
-
+from communication.shared.protocol import ROUTING_KEY_COSIM_PARAM
 
 LINE_PRINT_FORMAT = {
     "time": "{:20}",
@@ -20,8 +20,8 @@ LINE_PRINT_FORMAT = {
 
 
 class ControllerPhysical:
-    def __init__(self, rabbit_config, temperature_desired=35.0, lower_bound=5, heating_time=20,
-                 heating_gap=30):
+    def __init__(self, rabbit_config, temperature_desired=35.0, lower_bound=5.0, heating_time=20.0,
+                 heating_gap=30.0):
         self.temperature_desired = temperature_desired
         self.lower_bound = lower_bound
         self.heating_time = heating_time
@@ -62,6 +62,8 @@ class ControllerPhysical:
         self.safe_protocol()
         self._l.debug("Starting Fan")
         self._set_fan_on(True)
+        self.rabbitmq.subscribe(routing_key=ROUTING_KEY_COSIM_PARAM,
+                                on_message_callback=self.update_parameters)
         self.rabbitmq.subscribe(routing_key=ROUTING_KEY_STATE,
                                 on_message_callback=self.control_loop_callback)
 
@@ -91,7 +93,7 @@ class ControllerPhysical:
             self._l.debug("current state is: Waiting")
             self.heater_ctrl = False
             if 0 < self.next_time <= time.time():
-                if self.box_air_temperature <= self.temperature_desired:
+                if self.box_air_temperature <= self.temperature_desired and self.heating_time > 0:
                     self.current_state = "Heating"
                     self.heater_ctrl = True
                     self.next_time = time.time() + self.heating_time
@@ -139,6 +141,25 @@ class ControllerPhysical:
             }
         }
         self.rabbitmq.send_message(routing_key=ROUTING_KEY_CONTROLLER, message=ctrl_data)
+
+    def _safe_update_parameter(self, data, data_key, parameter, type_convert, value_check):
+        assert hasattr(self, parameter)
+        if data_key in data:
+            new_val = type_convert(data[data_key])
+            if value_check(new_val):
+                self._l.debug(f"Updating {parameter} to {new_val}.")
+                setattr(self, parameter, new_val)
+            else:
+                self._l.warning(f"Update of {parameter} to {new_val} failed. Invalid value.")
+
+    def update_parameters(self, ch, method, properties, body_json):
+        self._l.debug("New parameter msg:")
+        self._l.debug(body_json)
+        # TODO Ensure message is safe, then change parameters of the controller.
+        self._safe_update_parameter(body_json, 'C_in', 'heating_gap', float, lambda v: 0 < v)
+        # 100 is the hardcoded max heating time. for safety reasons
+        self._safe_update_parameter(body_json, 'H_in', 'heating_time', float, lambda v: v < 100)
+        self._safe_update_parameter(body_json, 'LL_in', 'lower_bound', float, lambda v: 0 < v)
 
     def control_loop_callback(self, ch, method, properties, body_json):
         self._record_message(body_json)
