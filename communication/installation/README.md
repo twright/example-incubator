@@ -2,17 +2,20 @@ To start the rabbitmq server, run:
 ```
 # start rabbitmq
 docker-compose up --detach --build
+[MACOS: docker compose up --detach --build]
 
 # Check logs of rabbitmq-server
 docker logs rabbitmq-server
 
 # Run script to test server (assumes you have correct environment)
-cd [RepoRoot]\software
+cd [RepoRoot]\software\incubator
 [Activate virtual environment]
 python -m communication.installation.test_server
 
 # Stop and remove the server
 docker-compose down -v
+[MACOS: docker compose down -v]
+
 ```
 
 More information in:
