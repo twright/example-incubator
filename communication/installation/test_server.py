@@ -2,19 +2,25 @@ import logging
 import time
 
 from communication.server.rabbitmq import Rabbitmq
-from config.config import config_logger, load_config
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.ERROR)
+    logging.basicConfig(level=logging.WARNING)
+    
+    rabbbitmq_config = {
+        "ip": "localhost",
+        "port": 5672,
+        "username": "incubator",
+        "password": "incubator",
+        "exchange": "Incubator_AMQP",
+        "type": "topic",
+        "vhost": "/"
+    }
 
-    config_logger("logging.conf")
-    config = load_config("startup.conf")
-
-    receiver = Rabbitmq(**config["rabbitmq"])
+    receiver = Rabbitmq(**rabbbitmq_config)
     receiver.connect_to_server()
     qname = receiver.declare_local_queue(routing_key="test")
 
-    sender = Rabbitmq(**config["rabbitmq"])
+    sender = Rabbitmq(**rabbbitmq_config)
     sender.connect_to_server()
     sender.send_message(routing_key="test", message={"text": "321"})
 
