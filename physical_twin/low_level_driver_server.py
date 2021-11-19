@@ -1,12 +1,9 @@
 import logging
 import time
 
-from gpiozero import LED
-
 # Import parameters and shared stuff
 from communication.server.rabbitmq import Rabbitmq
 from communication.shared.protocol import *
-from physical_twin.sensor_actuator_layer import Heater, Fan, TemperatureSensor
 from config.config import config_logger, load_config
 
 CTRL_EXEC_INTERVAL = 3.0
@@ -90,7 +87,7 @@ class IncubatorDriver:
             self.logger.debug(f"Fan command: on={fan_cmd}")
             self._safe_set_actuator(self.fan, fan_cmd)
 
-    def _safe_set_actuator(self, gpio_led: LED, on: bool):
+    def _safe_set_actuator(self, gpio_led, on: bool):
         if on and gpio_led.is_lit:
             self.logger.debug(f"  Ignored command as it is already on.")
             return
@@ -159,6 +156,7 @@ class IncubatorDriver:
 
 
 if __name__ == '__main__':
+    from physical_twin.sensor_actuator_layer import Heater, Fan, TemperatureSensor
     logging.basicConfig(level=logging.INFO)
     config_logger("logging.conf")
     config = load_config("startup.conf")
