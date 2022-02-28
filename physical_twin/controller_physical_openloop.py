@@ -5,6 +5,7 @@ import logging
 
 from communication.server.rabbitmq import Rabbitmq, ROUTING_KEY_STATE, ROUTING_KEY_HEATER, ROUTING_KEY_FAN, decode_json, \
     from_ns_to_s, ROUTING_KEY_CONTROLLER
+from models.controller_models.controller_open_loop import ControllerOpenLoopSM
 
 LINE_PRINT_FORMAT = {
     "time": "{:20}",
@@ -18,22 +19,21 @@ LINE_PRINT_FORMAT = {
 }
 
 
-class ControllerPhysical:
-    def __init__(self, rabbit_config, temperature_desired=35.0, lower_bound=5, heating_time=10,
-                 heating_gap=100):
-        self.temperature_desired = temperature_desired
-        self.lower_bound = lower_bound
-        self.samples_power_on = heating_time
-        self.samples_power_off = heating_gap
-
+class ControllerPhysicalOpenLoop:
+    def __init__(self, rabbit_config,
+                 n_samples_period,  # Total number of samples considered
+                 n_samples_heating,  # Number of samples (out of n_samples_period) that the heater is on.
+                 ):
         self._l = logging.getLogger("ControllerPhysical")
 
         self.box_air_temperature = None
         self.room_temperature = None
-
         self.heater_ctrl = None
-        self.current_state = "standby"
-        self.next_time = -1.0
+
+        self.n_samples_period = n_samples_period
+        self.n_samples_heating = n_samples_heating
+
+        self.state_machine = ControllerOpenLoopSM(n_samples_period, n_samples_heating)
 
         self.rabbitmq = Rabbitmq(**rabbit_config)
 
@@ -70,28 +70,8 @@ class ControllerPhysical:
             self.cleanup()
             sys.exit(0)
 
-        if self.current_state == "standby":
-            self._l.debug("current state is: standby")
-            self.heater_ctrl = False
-            self.next_time = time.time() + self.samples_power_on
-            self.current_state = "Heating"
-            return
-
-        if self.current_state == "Heating":
-            self._l.debug("current state is: Heating")
-            self.heater_ctrl = True
-            if time.time() >= self.next_time:
-                self.current_state = "CoolingDown"
-                self.next_time = time.time() + self.samples_power_off
-            return
-
-        if self.current_state == "CoolingDown":
-            self._l.debug("current state is: CoolingDown")
-            self.heater_ctrl = False
-            if time.time() >= self.next_time:
-                self.current_state = "Heating"
-                self.next_time = time.time() + self.samples_power_on
-            return
+        self.state_machine.step()
+        self.heater_ctrl = self.state_machine.cached_heater_on
 
     def cleanup(self):
         self.safe_protocol()
@@ -108,7 +88,7 @@ class ControllerPhysical:
             datetime.fromtimestamp(from_ns_to_s(message["time"])), message["fields"]["execution_interval"],
             message["fields"]["elapsed"],
             str(self.heater_ctrl), str(message["fields"]["fan_on"]), message["fields"]["t1"],
-            self.box_air_temperature, self.current_state
+            self.box_air_temperature, self.state_machine.current_state
         ))
 
     def upload_state(self, data):
@@ -116,18 +96,16 @@ class ControllerPhysical:
             "measurement": "controller",
             "time": time.time_ns(),
             "tags": {
-                "source": "controller"
+                "source": "controller_open_loop"
             },
             "fields": {
                 "plant_time": data["time"],
                 "heater_on": self.heater_ctrl,
                 "fan_on": data["fields"]["fan_on"],
-                "current_state": self.current_state,
-                "next_time": self.next_time,
-                "temperature_desired": self.temperature_desired,
-                "lower_bound": self.lower_bound,
-                "heating_time": self.heating_time,
-                "heating_gap": self.heating_gap,
+                "current_state": self.state_machine.current_state,
+                "next_action_timer": self.state_machine.next_action_timer,
+                "n_samples_period": self.n_samples_period,
+                "n_samples_heating": self.n_samples_heating,
             }
         }
         self.rabbitmq.send_message(routing_key=ROUTING_KEY_CONTROLLER, message=ctrl_data)
