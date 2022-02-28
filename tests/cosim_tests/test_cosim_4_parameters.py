@@ -5,6 +5,7 @@ from oomodelling import ModelSolver
 import matplotlib.pyplot as plt
 
 from models.physical_twin_models.system_model4 import SystemModel4Parameters
+from models.physical_twin_models.system_model4_open_loop import SystemModel4ParametersOpenLoop
 from models.plant_models.four_parameters_model.best_parameters import four_param_model_params
 from visualization.data_plotting import plotly_incubator_data, show_plotly
 from tests.cli_mode_test import CLIModeTest
@@ -66,6 +67,41 @@ class CosimulationTests(CLIModeTest):
         if self.ide_mode():
             show_plotly(fig)
 
+    def test_run_cosim_4param_mode_open_loop(self):
+
+        show_heater_signal = False
+        n_samples_period = 40
+
+        C_air_num = four_param_model_params[0]
+        G_box_num = four_param_model_params[1]
+        C_heater_num = four_param_model_params[2]
+        G_heater_num = four_param_model_params[3]
+
+        plt.figure()
+
+        def show_trace(n_samples_heating, n_samples_period):
+            m = SystemModel4ParametersOpenLoop(n_samples_period,
+                                               n_samples_heating,
+                                               C_air=C_air_num,
+                                               G_box=G_box_num,
+                                               C_heater=C_heater_num,
+                                               G_heater=G_heater_num, initial_box_temperature=22,
+                                               initial_heat_temperature=22)
+            ModelSolver().simulate(m, 0.0, 3000, 3.0)
+
+            plt.plot(m.signals['time'], m.plant.signals['T'], label=f"NHeating_{n_samples_heating}")
+            if show_heater_signal:
+                plt.plot(m.signals['time'], [30 if b else 0 for b in m.ctrl.signals["heater_on"]],
+                         label=f"NHeating_{n_samples_heating}")
+
+        for n_samples_heating in range(0, 5):
+            assert n_samples_heating <= n_samples_period
+            show_trace(n_samples_heating, n_samples_period)
+
+        plt.legend()
+
+        if self.ide_mode():
+            plt.show()
 
 
 if __name__ == '__main__':
