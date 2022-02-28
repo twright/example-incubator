@@ -25,7 +25,6 @@ class SystemModel4ParametersOpenLoop(Model):
                                                  C_heater=C_heater,
                                                  G_heater=G_heater)
 
-        self.ctrl.in_temperature = self.plant.T
         self.plant.in_heater_on = self.ctrl.heater_on
 
         self.save()
