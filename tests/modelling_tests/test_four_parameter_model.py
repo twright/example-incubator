@@ -22,8 +22,7 @@ class FourParameterModelTests(CLIModeTest):
         logging.basicConfig(level=(logging.INFO if self.ide_mode() else logging.WARN))
 
     def test_calibrate_four_parameter_model(self):
-        NEvals = 100 if self.ide_mode() else 1
-
+        NEvals = 500 if self.ide_mode() else 1
 
         params = four_param_model_params
 
