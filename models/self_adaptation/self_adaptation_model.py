@@ -1,7 +1,7 @@
 from oomodelling import Model
 
 from models.physical_twin_models.system_model4_open_loop import SystemModel4ParametersOpenLoop
-from monitoring.anomaly_detector import AnomalyDetector
+from monitoring.anomaly_detector import AnomalyDetector, AnomalyDetectorSM
 from monitoring.kalman_filter_4p import KalmanFilter4P
 
 
@@ -17,10 +17,9 @@ class SelfAdaptationScenario(Model):
                  initial_box_temperature,
                  initial_heat_temperature,
                  # Kalman Filter
-                 std_dev,
-                 step_size,
+                 kalman: KalmanFilter4P,
                  # Anomaly detector
-                 anomaly_threshold, ensure_anomaly_timer
+                 anomaly_detector_sm: AnomalyDetectorSM
                  ):
         super().__init__()
 
@@ -32,16 +31,9 @@ class SelfAdaptationScenario(Model):
                                                             G_heater, initial_box_temperature,
                                                             initial_heat_temperature)
 
-        self.kalman = KalmanFilter4P(step_size, std_dev,
-                                     C_air,
-                                     G_box,
-                                     C_heater,
-                                     G_heater,
-                                     initial_box_temperature,  # Assume initial room temperature is same as box temperature
-                                     initial_heat_temperature,
-                                     initial_box_temperature)
+        self.kalman = kalman
 
-        self.anomaly = AnomalyDetector(anomaly_threshold, ensure_anomaly_timer)
+        self.anomaly = AnomalyDetector(anomaly_detector_sm)
 
         # Plant --> KF
         self.kalman.in_T = self.physical_twin.plant.T

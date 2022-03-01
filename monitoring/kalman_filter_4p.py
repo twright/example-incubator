@@ -6,6 +6,7 @@ import sympy as sp
 import numpy as np
 
 from models.plant_models.globals import HEATER_VOLTAGE, HEATER_CURRENT
+from monitoring.updateable_kalman_filter import UpdateableKalmanFilter
 
 
 def construct_filter(step_size, std_dev,
@@ -99,7 +100,7 @@ def construct_filter(step_size, std_dev,
     return f
 
 
-class KalmanFilter4P(Model):
+class KalmanFilter4P(Model, UpdateableKalmanFilter):
     def __init__(self, step_size, std_dev,
                  C_air,
                  G_box,
@@ -136,3 +137,8 @@ class KalmanFilter4P(Model):
         self.cached_T_heater = next_x[0, 0]
         self.cached_T = next_x[1, 0]
         return super().discrete_step()
+
+    # Overrides
+    def update_parameters(self, C_air, G_box, C_heater, G_heater):
+        print("Updating parameters of Kalman filter...")
+        pass
