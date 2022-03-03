@@ -57,7 +57,7 @@ class SelfAdaptationTests(CLIModeTest):
 
         ModelSolver().simulate(m, 0.0, 6000, 3.0)
 
-        fig, (ax1, ax2) = plt.subplots(2, 1)
+        fig, (ax1) = plt.subplots(1, 1)
 
         ax1.plot(m.signals['time'], m.physical_twin.plant.signals['T'], label=f"- T")
         ax1.plot(m.signals['time'], m.kalman.signals['out_T'], linestyle="dashed", label=f"~ T")
@@ -67,9 +67,12 @@ class SelfAdaptationTests(CLIModeTest):
 
         ax1.legend()
 
-        ax2.plot(m.signals['time'], [1 if b else 0 for b in m.anomaly.signals["anomaly_detected"]], label="Anomaly")
-
         if self.ide_mode():
+            print("Parameters:")
+            print("C_air: ", database.C_air)
+            print("G_box: ", database.G_box)
+            print("C_heater: ", database.C_heater)
+            print("G_heater: ", database.G_heater)
             plt.show()
 
 
