@@ -2,13 +2,15 @@ import numpy as np
 from oomodelling import Model
 
 from calibration.calibrator import Calibrator
+from monitoring.controller_optimizer import ControllerOptimizer
 from monitoring.updateable_kalman_filter import UpdateableKalmanFilter
 
 
 class AnomalyDetectorSM:
     def __init__(self, anomaly_threshold, ensure_anomaly_timer,
                  calibrator: Calibrator,
-                 kalman_filter: UpdateableKalmanFilter):
+                 kalman_filter: UpdateableKalmanFilter,
+                 controller_optimizer: ControllerOptimizer):
         assert 0 < ensure_anomaly_timer
         assert 0 < anomaly_threshold
         self.current_state = "Listening"
@@ -16,6 +18,7 @@ class AnomalyDetectorSM:
         self.ensure_anomaly_timer = ensure_anomaly_timer
         self.anomaly_detected = False
         self.kalman_filter = kalman_filter
+        self.controller_optimizer = controller_optimizer
         # Holds the next sample for which an action has to be taken.
         self.next_action_timer = -1.0
         self.calibrator = calibrator
@@ -57,6 +60,7 @@ class AnomalyDetectorSM:
                 success, C_air, G_box, C_heater, G_heater = self.calibrator.calibrate(self.time_anomaly_start, time)
                 if success:
                     self.kalman_filter.update_parameters(C_air, G_box, C_heater, G_heater)
+                    self.controller_optimizer.optimize_controller()
                     self.reset()
                 return
 

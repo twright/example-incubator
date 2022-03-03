@@ -3,6 +3,8 @@ from oomodelling import Model
 from models.controller_models.controller_open_loop import ControllerOpenLoop
 from models.plant_models.four_parameters_model.four_parameter_model import FourParameterIncubatorPlant
 
+class SystemModel4ParametersOpenLoopSimulator():
+
 
 class SystemModel4ParametersOpenLoop(Model):
     def __init__(self,
