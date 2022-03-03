@@ -27,8 +27,8 @@ class SelfAdaptationTests(CLIModeTest):
         initial_heat_temperature = config["digital_twin"]["models"]["plant"]["param4"]["initial_heat_temperature"]
         std_dev = 0.02
         step_size = 3.0
-        anomaly_threshold = 4.0
-        ensure_anomaly_timer = 10
+        anomaly_threshold = 2.0
+        ensure_anomaly_timer = 20
         conv_xatol = 0.1
         conv_fatol = 0.1
         max_iterations = 200
