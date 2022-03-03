@@ -46,7 +46,7 @@ class Calibrator:
 
         if new_sol.success:
             C_air_new, G_box_new = new_sol.x
-            calibrated_sol = self.plant_simulator.run_simulation(times, reference_T[0], reference_T_heater[0],
+            calibrated_sol, _ = self.plant_simulator.run_simulation(times, reference_T[0], reference_T_heater[0],
                                                                  room_T, ctrl_signal,
                                                                  C_air_new, G_box_new, C_heater, G_heater)
 

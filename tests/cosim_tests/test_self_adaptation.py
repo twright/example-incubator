@@ -25,10 +25,10 @@ class SelfAdaptationTests(CLIModeTest):
         G_heater = config["digital_twin"]["models"]["plant"]["param4"]["G_heater"]
         initial_box_temperature = config["digital_twin"]["models"]["plant"]["param4"]["initial_box_temperature"]
         initial_heat_temperature = config["digital_twin"]["models"]["plant"]["param4"]["initial_heat_temperature"]
-        std_dev = 0.01
+        std_dev = 0.02
         step_size = 3.0
         anomaly_threshold = 4.0
-        ensure_anomaly_timer = 50
+        ensure_anomaly_timer = 10
         conv_xatol = 0.1
         conv_fatol = 0.1
         max_iterations = 200
@@ -62,6 +62,9 @@ class SelfAdaptationTests(CLIModeTest):
         ax1.plot(m.signals['time'], m.physical_twin.plant.signals['T'], label=f"- T")
         ax1.plot(m.signals['time'], m.kalman.signals['out_T'], linestyle="dashed", label=f"~ T")
 
+        for (times, trajectory) in database.trajectory_history:
+            ax1.plot(times, trajectory[0, :], label=f"cal T")
+
         ax1.legend()
 
         ax2.plot(m.signals['time'], [1 if b else 0 for b in m.anomaly.signals["anomaly_detected"]], label="Anomaly")
@@ -76,7 +79,7 @@ class MockDatabase(CalibratorDatabase):
     G_box: list[float] = []
     C_heater: list[float] = []
     G_heater: list[float] = []
-    trajectory_history: list[float] = []
+    trajectory_history: list = []
 
     def set_model(self, model: FourParameterIncubatorPlant):
         assert len(self.C_air) == len(self.G_box) == len(self.C_heater) == len(self.G_heater) == \
@@ -95,7 +98,7 @@ class MockDatabase(CalibratorDatabase):
         return signals, t_start_idx, t_end_idx
 
     def store_calibrated_trajectory(self, times, calibrated_sol):
-        self.trajectory_history.append(calibrated_sol)
+        self.trajectory_history.append((times, calibrated_sol))
 
     def update_parameters(self, C_air_new, G_box_new, C_heater, G_heater):
         self.C_air.append(C_air_new)

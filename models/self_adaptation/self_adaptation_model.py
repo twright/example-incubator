@@ -42,6 +42,7 @@ class SelfAdaptationScenario(Model):
         # self.noise_sensor.u = self.physical_twin.plant.T
         # self.kalman.in_T = self.noise_sensor.y
         self.kalman.in_T = self.physical_twin.plant.T
+        self.kalman.in_heater_on = self.physical_twin.ctrl.heater_on
 
         # KF --> AnomalyDetector
         self.anomaly.predicted_temperature = self.kalman.out_T
