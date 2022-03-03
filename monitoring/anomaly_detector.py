@@ -6,7 +6,9 @@ from monitoring.updateable_kalman_filter import UpdateableKalmanFilter
 
 
 class AnomalyDetectorSM:
-    def __init__(self, anomaly_threshold, ensure_anomaly_timer, calibrator: Calibrator, kalman_filter: UpdateableKalmanFilter):
+    def __init__(self, anomaly_threshold, ensure_anomaly_timer,
+                 calibrator: Calibrator,
+                 kalman_filter: UpdateableKalmanFilter):
         assert 0 < ensure_anomaly_timer
         assert 0 < anomaly_threshold
         self.current_state = "Listening"
@@ -55,6 +57,7 @@ class AnomalyDetectorSM:
                 success, C_air, G_box, C_heater, G_heater = self.calibrator.calibrate(self.time_anomaly_start, time)
                 if success:
                     self.kalman_filter.update_parameters(C_air, G_box, C_heater, G_heater)
+                    self.reset()
                 return
 
             return
@@ -76,5 +79,5 @@ class AnomalyDetector(Model):
         self.save()
 
     def discrete_step(self):
-        self.state_machine.step(self.real_temperature(), self.predicted_temperature(), self.in_reset())
+        self.state_machine.step(self.real_temperature(), self.predicted_temperature(), self.time())
         return super().discrete_step()

@@ -3,6 +3,7 @@ from oomodelling import Model
 from models.physical_twin_models.system_model4_open_loop import SystemModel4ParametersOpenLoop
 from monitoring.anomaly_detector import AnomalyDetector, AnomalyDetectorSM
 from monitoring.kalman_filter_4p import KalmanFilter4P
+from monitoring.noise_model import NoiseFeedthrough
 
 
 class SelfAdaptationScenario(Model):
@@ -19,7 +20,8 @@ class SelfAdaptationScenario(Model):
                  # Kalman Filter
                  kalman: KalmanFilter4P,
                  # Anomaly detector
-                 anomaly_detector_sm: AnomalyDetectorSM
+                 anomaly_detector_sm: AnomalyDetectorSM,
+                 std_dev
                  ):
         super().__init__()
 
@@ -36,6 +38,9 @@ class SelfAdaptationScenario(Model):
         self.anomaly = AnomalyDetector(anomaly_detector_sm)
 
         # Plant --> KF
+        # self.noise_sensor = NoiseFeedthrough(std_dev)
+        # self.noise_sensor.u = self.physical_twin.plant.T
+        # self.kalman.in_T = self.noise_sensor.y
         self.kalman.in_T = self.physical_twin.plant.T
 
         # KF --> AnomalyDetector

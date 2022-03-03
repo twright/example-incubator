@@ -29,7 +29,7 @@ class TestKalmanFilter(CLIModeTest):
         events = pandas.read_csv(resource_file_path("./datasets/lid_opening_experiment_jan_2021/events.csv"))
         events["timestamp"] = pandas.to_datetime(events["time"], unit=time_unit)
 
-        # Inputs to model
+        # Inputs to _model
         measurements_heater = np.array([1.0 if b else 0.0 for b in data["heater_on"]])
         measurements_Troom = data["t1"].to_numpy()
 
@@ -59,7 +59,7 @@ class TestKalmanFilter(CLIModeTest):
 
         kalman_prediction = np.array(kalman_prediction).squeeze(2)
 
-        # Run experiment with model, without any filtering, just for comparison.
+        # Run experiment with _model, without any filtering, just for comparison.
         results_4p, sol = run_experiment_four_parameter_model(data, params)
 
         fig = plotly_incubator_data(data,
