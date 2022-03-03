@@ -122,7 +122,12 @@ class KalmanFilter4P(Model, UpdateableKalmanFilter):
         self.out_T = self.var(lambda: self.cached_T)
         self.out_T_heater = self.var(lambda: self.cached_T_heater)
 
+        # Store these values so they can be used to reinitialize the kalman filter.
+        self.step_size = step_size
+        self.std_dev = std_dev
+
         self.save()
+
 
     def kalman_step(self, in_heater, in_room_T, in_T):
         self.filter.predict(u=np.array([
@@ -140,5 +145,6 @@ class KalmanFilter4P(Model, UpdateableKalmanFilter):
 
     # Overrides
     def update_parameters(self, C_air, G_box, C_heater, G_heater):
-        print("Updating parameters of Kalman filter...")
-        pass
+        self.filter = construct_filter(self.step_size, self.std_dev,
+                                       C_air, G_box, C_heater, G_heater,
+                                       self.cached_T_heater, self.cached_T)
