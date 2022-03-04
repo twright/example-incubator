@@ -1,4 +1,4 @@
-class CalibratorDatabase:
+class IDatabase:
 
     def get_signals_between(self, t_start, t_end):
         raise NotImplementedError("For subclasses")
@@ -10,4 +10,10 @@ class CalibratorDatabase:
         raise NotImplementedError("For subclasses")
 
     def get_plant4_parameters(self):
+        raise NotImplementedError("For subclasses")
+
+    def get_pt_snapshot(self):
+        raise NotImplementedError("For subclasses")
+
+    def get_ctrl_parameters(self):
         raise NotImplementedError("For subclasses")

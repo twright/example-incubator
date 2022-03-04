@@ -2,14 +2,14 @@ import numpy as np
 from oomodelling import Model
 
 from calibration.calibrator import Calibrator
-from monitoring.controller_optimizer import ControllerOptimizer
-from monitoring.updateable_kalman_filter import UpdateableKalmanFilter
+from self_adaptation.controller_optimizer import ControllerOptimizer
+from interfaces.updateable_kalman_filter import IUpdateableKalmanFilter
 
 
 class AnomalyDetectorSM:
     def __init__(self, anomaly_threshold, ensure_anomaly_timer,
                  calibrator: Calibrator,
-                 kalman_filter: UpdateableKalmanFilter,
+                 kalman_filter: IUpdateableKalmanFilter,
                  controller_optimizer: ControllerOptimizer):
         assert 0 < ensure_anomaly_timer
         assert 0 < anomaly_threshold

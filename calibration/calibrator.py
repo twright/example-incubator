@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.optimize import minimize
 
-from calibration.calibrator_database import CalibratorDatabase
+from interfaces.database import IDatabase
 from digital_twin.simulator.plant_simulator import PlantSimulator4Params
 
 
@@ -11,7 +11,7 @@ def compute_error(tracked_solutions, new_state_trajectories):
 
 
 class Calibrator:
-    def __init__(self, database: CalibratorDatabase, plant_simulator: PlantSimulator4Params, conv_xatol, conv_fatol, max_iterations):
+    def __init__(self, database: IDatabase, plant_simulator: PlantSimulator4Params, conv_xatol, conv_fatol, max_iterations):
         self.database = database
         self.plant_simulator = plant_simulator
         self.conv_xatol = conv_xatol

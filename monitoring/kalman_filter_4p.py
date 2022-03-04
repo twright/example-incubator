@@ -6,7 +6,7 @@ import sympy as sp
 import numpy as np
 
 from models.plant_models.globals import HEATER_VOLTAGE, HEATER_CURRENT
-from monitoring.updateable_kalman_filter import UpdateableKalmanFilter
+from interfaces.updateable_kalman_filter import IUpdateableKalmanFilter
 
 
 def construct_filter(step_size, std_dev,
@@ -100,7 +100,7 @@ def construct_filter(step_size, std_dev,
     return f
 
 
-class KalmanFilter4P(Model, UpdateableKalmanFilter):
+class KalmanFilter4P(Model, IUpdateableKalmanFilter):
     def __init__(self, step_size, std_dev,
                  C_air,
                  G_box,

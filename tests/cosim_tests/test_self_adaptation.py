@@ -2,7 +2,7 @@ from oomodelling import ModelSolver
 import matplotlib.pyplot as plt
 
 from calibration.calibrator import Calibrator
-from calibration.calibrator_database import CalibratorDatabase
+from interfaces.database import IDatabase
 from config.config import load_config
 from digital_twin.simulator.plant_simulator import PlantSimulator4Params
 from models.plant_models.four_parameters_model.four_parameter_model import FourParameterIncubatorPlant
@@ -76,7 +76,7 @@ class SelfAdaptationTests(CLIModeTest):
             plt.show()
 
 
-class MockDatabase(CalibratorDatabase):
+class MockDatabase(IDatabase):
     _model: FourParameterIncubatorPlant = None
     C_air: list[float] = []
     G_box: list[float] = []
