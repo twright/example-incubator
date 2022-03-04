@@ -29,10 +29,10 @@ class SelfAdaptationTests(CLIModeTest):
         G_heater = config["digital_twin"]["models"]["plant"]["param4"]["G_heater"]
         initial_box_temperature = config["digital_twin"]["models"]["plant"]["param4"]["initial_box_temperature"]
         initial_heat_temperature = config["digital_twin"]["models"]["plant"]["param4"]["initial_heat_temperature"]
-        std_dev = 0.02
+        std_dev = 0.1
         step_size = 3.0
-        anomaly_threshold = 2.0
-        ensure_anomaly_timer = 20
+        anomaly_threshold = 1.0
+        ensure_anomaly_timer = 6
         conv_xatol = 0.1
         conv_fatol = 0.1
         max_iterations = 200
@@ -58,13 +58,15 @@ class SelfAdaptationTests(CLIModeTest):
 
         # Inform mock db of plant _plant.
         database.set_models(m.physical_twin.plant, m.physical_twin.ctrl)
+        # Inform mock of controller
+        ctrl.set_model(m.physical_twin.ctrl)
 
         # Wire in a custom function for the G_box input, so we can change it.
         m.physical_twin.plant.G_box = lambda: G_box if m.time() < 1000 else (G_box * 10 if m.time() < 2000 else G_box)
 
         ModelSolver().simulate(m, 0.0, 6000, 3.0)
 
-        fig, (ax1) = plt.subplots(1, 1)
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex='all')
 
         ax1.plot(m.signals['time'], m.physical_twin.plant.signals['T'], label=f"- T")
         ax1.plot(m.signals['time'], m.kalman.signals['out_T'], linestyle="dashed", label=f"~ T")
@@ -73,6 +75,16 @@ class SelfAdaptationTests(CLIModeTest):
             ax1.plot(times, trajectory[0, :], label=f"cal T")
 
         ax1.legend()
+
+        ax2.plot(m.signals['time'], [(1 if b else 0) for b in m.physical_twin.ctrl.signals['heater_on']], label=f"heater_on")
+        ax2.plot(m.signals['time'], [(1 if b else 0) for b in m.kalman.signals['in_heater_on']], linestyle="dashed", label=f"~ heater_on")
+
+        ax2.legend()
+
+        ax3.plot(m.signals['time'], m.physical_twin.plant.signals['T_heater'], label=f"T_heater")
+        ax3.plot(m.signals['time'], m.kalman.signals['out_T_heater'], linestyle="dashed", label=f"~ T")
+
+        ax3.legend()
 
         if self.ide_mode():
             print("Parameters:")
@@ -84,8 +96,18 @@ class SelfAdaptationTests(CLIModeTest):
 
 
 class MockController(IController):
+
+    controller: ControllerOpenLoop = None
+
     def set_new_parameters(self, n_samples_heating_new, n_samples_period_new):
-        raise NotImplementedError("")
+        assert self.controller is not None
+        assert isinstance(n_samples_heating_new, int)
+        assert isinstance(n_samples_period_new, int)
+        self.controller.reset_params(n_samples_heating_new, n_samples_period_new)
+
+    def set_model(self, ctrl):
+        assert self.controller is None
+        self.controller = ctrl
 
 
 class MockDatabase(IDatabase):
@@ -114,8 +136,8 @@ class MockDatabase(IDatabase):
         self.G_box.append(plant.G_box())
         self.C_heater.append(plant.C_heater)
         self.G_heater.append(plant.G_heater)
-        self.n_samples_heating.append(ctrl.n_samples_heating)
-        self.n_samples_period.append(ctrl.n_samples_period)
+        self.n_samples_heating.append(ctrl.param_n_samples_heating)
+        self.n_samples_period.append(ctrl.param_n_samples_period)
 
     def get_plant_signals_between(self, t_start, t_end):
         signals = self._plant.signals

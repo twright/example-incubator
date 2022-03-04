@@ -41,8 +41,8 @@ class ControllerOptimizer:
                                                      n_samples_heating_guess, n_samples_period, controller_step_size,
                                                      C_air, G_box, C_heater, G_heater)
             # Error is how far from the desired temperature the simulation is, for a few seconds in steady state.
-            range_for_error = np.array(model.plant.signals['T'][-100:-1])
-            error = np.sum(np.power(range_for_error - desired_temperature, 2))
+            range_T_for_error = np.array(model.plant.signals['T'][-100:-1])
+            error = np.sum(np.power(range_T_for_error - desired_temperature, 2))
             return error
 
         # Start optimization process - The process uses braketing
@@ -66,7 +66,7 @@ class ControllerOptimizer:
 
             assert new_sol.success, new_sol.message
 
-            n_samples_heating_new = new_sol.y
+            n_samples_heating_new = round(new_sol.x)
 
         if n_samples_heating_new is not None:
             self.controller.set_new_parameters(n_samples_heating_new, n_samples_period)

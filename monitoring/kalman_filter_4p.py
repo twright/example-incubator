@@ -92,8 +92,8 @@ def construct_filter(step_size, std_dev,
     f.F = dt_system.A
     f.B = dt_system.B
     f.H = dt_system.C
-    f.P = np.array([[100., 0.],
-                    [0., 100.]])
+    f.P = np.array([[0., 0.],
+                    [0., 0.]])
     f.R = np.array([[std_dev]])
     f.Q = Q_discrete_white_noise(dim=2, dt=step_size, var=std_dev ** 2)
 

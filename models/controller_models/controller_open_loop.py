@@ -10,10 +10,13 @@ class ControllerOpenLoop(Model):
         assert 0 <= n_samples_heating <= n_samples_period
         super().__init__()
 
-        self.n_samples_heating = self.parameter(n_samples_heating)
-        self.n_samples_period = self.parameter(n_samples_period)
+        self.param_n_samples_heating = n_samples_heating
+        self.param_n_samples_period = n_samples_period
 
-        self.state_machine = ControllerOpenLoopSM(n_samples_period, n_samples_heating)
+        self.n_samples_heating = self.input(lambda: self.param_n_samples_heating)
+        self.n_samples_period = self.input(lambda: self.param_n_samples_period)
+
+        self.state_machine = ControllerOpenLoopSM(self.param_n_samples_period, self.param_n_samples_heating)
         self.cached_heater_on = False
 
         self.heater_on = self.var(lambda: self.cached_heater_on)
@@ -24,6 +27,12 @@ class ControllerOpenLoop(Model):
         self.state_machine.step()
         self.cached_heater_on = self.state_machine.cached_heater_on
         return super().discrete_step()
+
+    def reset_params(self, n_samples_heating, n_samples_period):
+        self.param_n_samples_heating = n_samples_heating
+        self.param_n_samples_period = n_samples_period
+        self.state_machine = ControllerOpenLoopSM(self.param_n_samples_period, self.param_n_samples_heating)
+        self.cached_heater_on = False
 
 
 class ControllerOpenLoopSM():
