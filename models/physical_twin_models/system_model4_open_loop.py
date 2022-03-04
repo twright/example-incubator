@@ -1,17 +1,32 @@
-from oomodelling import Model
+from oomodelling import Model, ModelSolver
 
 from models.controller_models.controller_open_loop import ControllerOpenLoop
 from models.plant_models.four_parameters_model.four_parameter_model import FourParameterIncubatorPlant
+
 
 class SystemModel4ParametersOpenLoopSimulator:
     def run_simulation(self, tf,
                        # Initial state
                        initial_T, initial_T_heater, initial_room_T,
                        # Controller parameters
-                       n_samples_heating, n_samples_period, controller_step_size,
+                       n_samples_heating: int, n_samples_period: int, controller_step_size: float,
                        # Plant parameters
                        C_air, G_box, C_heater, G_heater):
-        pass
+
+        model = SystemModel4ParametersOpenLoop(n_samples_period, n_samples_heating,
+                                               C_air, G_box, C_heater, G_heater,
+                                               initial_T, initial_T_heater)
+
+        # Wire the lookup table to the _plant
+        model.plant.in_room_temperature = lambda: initial_room_T
+
+        # Run simulation
+        sol = ModelSolver().simulate(model, 0.0, tf, controller_step_size)
+
+        # Return model that has the results
+        return model
+
+
 
 class SystemModel4ParametersOpenLoop(Model):
     def __init__(self,

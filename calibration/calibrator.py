@@ -20,7 +20,7 @@ class Calibrator:
 
     def calibrate(self, t_start, t_end):
 
-        signals, t_start_idx, t_end_idx = self.database.get_signals_between(t_start, t_end)
+        signals, t_start_idx, t_end_idx = self.database.get_plant_signals_between(t_start, t_end)
         times = signals["time"][t_start_idx:t_end_idx]
         reference_T = signals["T"][t_start_idx:t_end_idx]
         ctrl_signal = signals["in_heater_on"][t_start_idx:t_end_idx]
@@ -51,7 +51,7 @@ class Calibrator:
                                                                  C_air_new, G_box_new, C_heater, G_heater)
 
             self.database.store_calibrated_trajectory(times, calibrated_sol)
-            self.database.update_parameters(C_air_new, G_box_new, C_heater, G_heater)
+            self.database.update_plant_parameters(C_air_new, G_box_new, C_heater, G_heater)
             return True, C_air_new, G_box_new, C_heater, G_heater
         else:
             return False, C_air, G_box, C_heater, G_heater

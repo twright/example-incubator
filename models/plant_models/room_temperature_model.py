@@ -3,7 +3,7 @@ import math
 
 def room_temperature(t):
     """
-    Rough _model of room temperature
+    Rough _plant of room temperature
     Expects time in seconds since EPOCH.
     """
     a = 10.0
