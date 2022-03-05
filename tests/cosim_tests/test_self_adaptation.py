@@ -33,10 +33,13 @@ class SelfAdaptationTests(CLIModeTest):
         std_dev = 1.4
         step_size = 3.0
         anomaly_threshold = 1.0
+        # Time spent before declaring that there is an anomaly, after the first time the anomaly occurred.
         ensure_anomaly_timer = 3
-        horizon_for_recalibration = 3*step_size
-        conv_xatol = 1.0
-        conv_fatol = 1.0
+        # Time spent, after the anomaly was declared as detected, just so enough data about the system is gathered.
+        # The data used for recalibration will be in interval [time_first_occurrence, time_data_gathered]
+        gather_data_timer = 6
+        conv_xatol = 0.1
+        conv_fatol = 0.1
         max_iterations = 200
         restrict_T_heater = True
         tf = 6000 if self.ide_mode() else 3000
@@ -51,7 +54,7 @@ class SelfAdaptationTests(CLIModeTest):
         pt_simulator = SystemModel4ParametersOpenLoopSimulator()
         ctrl = MockController()
         ctrl_optimizer = ControllerOptimizer(database, pt_simulator, ctrl, conv_xatol, conv_fatol, max_iterations, restrict_T_heater)
-        anomaly_detector = AnomalyDetectorSM(anomaly_threshold, ensure_anomaly_timer, horizon_for_recalibration, calibrator, kalman, ctrl_optimizer)
+        anomaly_detector = AnomalyDetectorSM(anomaly_threshold, ensure_anomaly_timer, gather_data_timer, calibrator, kalman, ctrl_optimizer)
 
         m = SelfAdaptationScenario(n_samples_period, n_samples_heating,
                                    C_air, G_box, C_heater, G_heater,
@@ -68,7 +71,7 @@ class SelfAdaptationTests(CLIModeTest):
         # Wire in a custom function for the G_box input, so we can change it.
         m.physical_twin.plant.G_box = lambda: G_box if m.time() < 1000 else (G_box * 10 if m.time() < 2000 else G_box)
 
-        # Wire in a custom fucntion for the C_air parameter,
+        # Wire in a custom function for the C_air parameter,
         # so we mimick a different object being placed in the incubator.
         # Commented out because it does not seem to work very well.
         # m.physical_twin.plant.C_air = lambda: C_air if m.time() < 1000 else (C_air * 7 if m.time() < 2000 else C_air)

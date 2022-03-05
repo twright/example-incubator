@@ -7,19 +7,21 @@ from interfaces.updateable_kalman_filter import IUpdateableKalmanFilter
 
 
 class AnomalyDetectorSM:
-    def __init__(self, anomaly_threshold, ensure_anomaly_timer, horizon_for_recalibration,
+    def __init__(self, anomaly_threshold, ensure_anomaly_timer, gather_data_timer,
                  calibrator: Calibrator,
                  kalman_filter: IUpdateableKalmanFilter,
                  controller_optimizer: ControllerOptimizer):
         assert 0 < ensure_anomaly_timer
+        assert 0 < gather_data_timer
         assert 0 < anomaly_threshold
         self.current_state = "Listening"
         self.anomaly_threshold = anomaly_threshold
-        self.horizon_for_recalibration = horizon_for_recalibration
+        self.gather_data_timer = gather_data_timer
         self.ensure_anomaly_timer = ensure_anomaly_timer
         self.anomaly_detected = False
         self.kalman_filter = kalman_filter
         self.controller_optimizer = controller_optimizer
+
         # Holds the next sample for which an action has to be taken.
         self.next_action_timer = -1.0
         self.calibrator = calibrator
@@ -55,17 +57,31 @@ class AnomalyDetectorSM:
 
             if self.next_action_timer == 0:
                 assert temperature_residual_abs >= self.anomaly_threshold
-                self.current_state = "AnomalyDetected"
-                self.next_action_timer = -1
+                self.current_state = "GatheringData"
+                self.next_action_timer = self.gather_data_timer
                 self.anomaly_detected = True
-                success, C_air, G_box, C_heater, G_heater = self.calibrator.calibrate(max(0, self.time_anomaly_start - self.horizon_for_recalibration), time)
-                if success:
-                    self.kalman_filter.update_parameters(C_air, G_box, C_heater, G_heater)
-                    self.controller_optimizer.optimize_controller()
-                    self.reset()
                 return
 
             return
+        if self.current_state == "GatheringData":
+            assert self.anomaly_detected
+            assert self.next_action_timer >= 0
+            if self.next_action_timer > 0:
+                self.next_action_timer -= 1
+            if self.next_action_timer == 0:
+                self.current_state = "Calibrating"
+                self.next_action_timer = -1
+                return
+            return
+        if self.current_state == "Calibrating":
+            assert self.time_anomaly_start >= 0.0
+            success, C_air, G_box, C_heater, G_heater = self.calibrator.calibrate(self.time_anomaly_start, time)
+            if success:
+                self.kalman_filter.update_parameters(C_air, G_box, C_heater, G_heater)
+                self.controller_optimizer.optimize_controller()
+                self.reset()
+            return
+
 
 
 class AnomalyDetector(Model):

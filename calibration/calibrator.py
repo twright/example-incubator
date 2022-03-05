@@ -34,12 +34,18 @@ class Calibrator:
 
         def cost(p):
             C_air, G_box = p
-            new_trajs, model = self.plant_simulator.run_simulation(times, reference_T[0], reference_T_heater[0], room_T, ctrl_signal,
-                                                            C_air, G_box, C_heater, G_heater)
-            error = compute_error(tracked_solutions, new_trajs)
-            return error
+            try:
+                new_trajs, model = self.plant_simulator.run_simulation(times, reference_T[0], reference_T_heater[0], room_T, ctrl_signal,
+                                                                C_air, G_box, C_heater, G_heater)
+                error = compute_error(tracked_solutions, new_trajs)
+                return error
+            except ValueError as e:
+                print("Simulation failed with the following parameters and initial conditions:")
+                print(f"C_air={C_air}, G_box={G_box}, C_heater={C_heater}, G_heater={G_heater}")
+                print(f"T0={reference_T[0]}, T_heater0={reference_T_heater[0]}")
+                raise e
 
-        new_sol = minimize(cost, np.array([C_air, G_box]), method='Nelder-Mead',
+        new_sol = minimize(cost, np.array([C_air, G_box]), method='Nelder-Mead', bounds=[(150.0, 1e4), (0.7, 1e4)],
                            options={'xatol': self.conv_xatol, 'fatol': self.conv_fatol, 'maxiter': self.max_iterations})
 
         assert new_sol.success, new_sol.message

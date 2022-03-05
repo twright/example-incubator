@@ -50,7 +50,7 @@ class ControllerOptimizer:
                 saturation_of_max_t_heater = range_T_heater_for_error - max_t_heater
                 # Replace negative values with zero, so only signals that exceeds max_t_heater remains.
                 saturation_of_max_t_heater[saturation_of_max_t_heater < 0] = 0.
-                error += np.sum(saturation_of_max_t_heater)
+                error += np.sum(np.power(saturation_of_max_t_heater, 4))
             return error
 
         # Start optimization process - The process uses braketing
