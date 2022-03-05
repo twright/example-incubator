@@ -23,7 +23,7 @@ class AnomalyDetectorSM:
         self.controller_optimizer = controller_optimizer
 
         # Holds the next sample for which an action has to be taken.
-        self.next_action_timer = -1.0
+        self.next_action_timer = -1
         self.calibrator = calibrator
         self.time_anomaly_start = -1.0
 

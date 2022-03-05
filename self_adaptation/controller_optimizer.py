@@ -11,7 +11,8 @@ class ControllerOptimizer:
     def __init__(self, database: IDatabase,
                  pt_simulator: SystemModel4ParametersOpenLoopSimulator,
                  controller: IController,
-                 conv_xatol, conv_fatol, max_iterations, restrict_T_heater):
+                 conv_xatol, conv_fatol, max_iterations, restrict_T_heater,
+                 desired_temperature, max_t_heater):
         self.conv_xatol = conv_xatol
         self.conv_fatol = conv_fatol
         self.max_iterations = max_iterations
@@ -19,6 +20,8 @@ class ControllerOptimizer:
         self.pt_simulator = pt_simulator
         self.controller = controller
         self.restrict_T_heater = restrict_T_heater
+        self.desired_temperature = desired_temperature
+        self.max_t_heater = max_t_heater
 
     def optimize_controller(self):
         # Get system snapshot
@@ -28,9 +31,6 @@ class ControllerOptimizer:
         C_air, G_box, C_heater, G_heater = self.database.get_plant4_parameters()
 
         time_til_steady_state = time + 3000  # Obtained from empirical experiments
-
-        desired_temperature = 38
-        max_t_heater = 60
 
         # Get current controller parameters
         n_samples_heating, n_samples_period, controller_step_size = self.database.get_ctrl_parameters()
@@ -44,10 +44,10 @@ class ControllerOptimizer:
                                                      C_air, G_box, C_heater, G_heater)
             # Error is how far from the desired temperature the simulation is, for a few seconds in steady state.
             range_T_for_error = np.array(model.plant.signals['T'][-100:-1])
-            error = np.sum(np.power(range_T_for_error - desired_temperature, 2))
+            error = np.sum(np.power(range_T_for_error - self.desired_temperature, 2))
             if self.restrict_T_heater:
                 range_T_heater_for_error = np.array(model.plant.signals['T_heater'][-100:-1])
-                saturation_of_max_t_heater = range_T_heater_for_error - max_t_heater
+                saturation_of_max_t_heater = range_T_heater_for_error - self.max_t_heater
                 # Replace negative values with zero, so only signals that exceeds max_t_heater remains.
                 saturation_of_max_t_heater[saturation_of_max_t_heater < 0] = 0.
                 error += np.sum(np.power(saturation_of_max_t_heater, 4))
@@ -57,6 +57,9 @@ class ControllerOptimizer:
         # and therefore assumes that
         # cost(n_samples_heating) < cost(max_samples_heating) and cost(n_samples_heating) < cost(0)
         # If that's not true, then it means the best controller configuration is at the extremes.
+        # Ensure that the initial guess for n_samples_period is not zero,
+        #   in order to avoid getting stuck in the same policy forever.
+        n_samples_heating = max(1, n_samples_heating)
         ca = cost(0)
         cb = cost(n_samples_heating)
         cc = cost(n_samples_period)
@@ -76,16 +79,15 @@ class ControllerOptimizer:
 
             n_samples_heating_new = round(new_sol.x)
 
-        if n_samples_heating_new is not None:
-            # Recoord parameters and update controller
-            self.controller.set_new_parameters(n_samples_heating_new, n_samples_period)
-            self.database.update_ctrl_parameters(n_samples_heating_new, n_samples_period)
-            # Store predicted simulation, for debugging purposes
-            model = self.pt_simulator.run_simulation(time, time_til_steady_state, T, T_heater, room_T,
-                                                     n_samples_heating_new, n_samples_period, controller_step_size,
-                                                     C_air, G_box, C_heater, G_heater)
-            self.database.store_controller_optimal_policy(model.signals['time'],
-                                                          model.plant.signals['T'],
-                                                          model.plant.signals['T_heater'],
-                                                          model.ctrl.signals['heater_on'])
-
+        assert n_samples_heating_new is not None
+        # Record parameters and update controller
+        self.controller.set_new_parameters(n_samples_heating_new, n_samples_period)
+        self.database.update_ctrl_parameters(n_samples_heating_new, n_samples_period)
+        # Store predicted simulation, for debugging purposes
+        model = self.pt_simulator.run_simulation(time, time_til_steady_state, T, T_heater, room_T,
+                                                 n_samples_heating_new, n_samples_period, controller_step_size,
+                                                 C_air, G_box, C_heater, G_heater)
+        self.database.store_controller_optimal_policy(model.signals['time'],
+                                                      model.plant.signals['T'],
+                                                      model.plant.signals['T_heater'],
+                                                      model.ctrl.signals['heater_on'])

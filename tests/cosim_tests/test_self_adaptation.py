@@ -42,7 +42,11 @@ class SelfAdaptationTests(CLIModeTest):
         conv_xatol = 0.1
         conv_fatol = 0.1
         max_iterations = 200
+        desired_temperature = 38
+        max_t_heater = 60
         restrict_T_heater = True
+        trigger_optimization_threshold = 10.0
+        wait_til_supervising_timer = 50 # N steps supervisor should wait before kicking in.
         tf = 6000 if self.ide_mode() else 3000
 
         kalman = KalmanFilter4P(std_dev, step_size,
@@ -54,9 +58,9 @@ class SelfAdaptationTests(CLIModeTest):
         calibrator = Calibrator(database, plant_simulator, conv_xatol, conv_fatol, max_iterations)
         pt_simulator = SystemModel4ParametersOpenLoopSimulator()
         ctrl = MockController()
-        ctrl_optimizer = ControllerOptimizer(database, pt_simulator, ctrl, conv_xatol, conv_fatol, max_iterations, restrict_T_heater)
+        ctrl_optimizer = ControllerOptimizer(database, pt_simulator, ctrl, conv_xatol, conv_fatol, max_iterations, restrict_T_heater, desired_temperature, max_t_heater)
         anomaly_detector = AnomalyDetectorSM(anomaly_threshold, ensure_anomaly_timer, gather_data_timer, calibrator, kalman, ctrl_optimizer)
-        supervisor = SupervisorSM()
+        supervisor = SupervisorSM(ctrl_optimizer, desired_temperature, max_t_heater, restrict_T_heater, trigger_optimization_threshold, wait_til_supervising_timer)
 
         m = SelfAdaptationScenario(n_samples_period, n_samples_heating,
                                    C_air, G_box, C_heater, G_heater,
