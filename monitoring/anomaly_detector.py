@@ -7,7 +7,7 @@ from interfaces.updateable_kalman_filter import IUpdateableKalmanFilter
 
 
 class AnomalyDetectorSM:
-    def __init__(self, anomaly_threshold, ensure_anomaly_timer,
+    def __init__(self, anomaly_threshold, ensure_anomaly_timer, horizon_for_recalibration,
                  calibrator: Calibrator,
                  kalman_filter: IUpdateableKalmanFilter,
                  controller_optimizer: ControllerOptimizer):
@@ -15,6 +15,7 @@ class AnomalyDetectorSM:
         assert 0 < anomaly_threshold
         self.current_state = "Listening"
         self.anomaly_threshold = anomaly_threshold
+        self.horizon_for_recalibration = horizon_for_recalibration
         self.ensure_anomaly_timer = ensure_anomaly_timer
         self.anomaly_detected = False
         self.kalman_filter = kalman_filter
@@ -57,7 +58,7 @@ class AnomalyDetectorSM:
                 self.current_state = "AnomalyDetected"
                 self.next_action_timer = -1
                 self.anomaly_detected = True
-                success, C_air, G_box, C_heater, G_heater = self.calibrator.calibrate(self.time_anomaly_start, time)
+                success, C_air, G_box, C_heater, G_heater = self.calibrator.calibrate(max(0, self.time_anomaly_start - self.horizon_for_recalibration), time)
                 if success:
                     self.kalman_filter.update_parameters(C_air, G_box, C_heater, G_heater)
                     self.controller_optimizer.optimize_controller()
@@ -69,7 +70,7 @@ class AnomalyDetectorSM:
 
 class AnomalyDetector(Model):
     def __init__(self,
-                 anomaly_detector_sm
+                 anomaly_detector_sm: AnomalyDetectorSM
                  ):
         super().__init__()
 

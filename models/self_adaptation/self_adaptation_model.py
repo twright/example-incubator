@@ -33,9 +33,11 @@ class SelfAdaptationScenario(Model):
                                                             G_heater, initial_box_temperature,
                                                             initial_heat_temperature)
 
-        self.kalman = kalman
-
+        # Note the relative order between anomaly detector and Kalman filter.
+        # We assign anomaly first so that it will step before the kalman filter does,
+        # preventing the kalman filter from quickly recovering.
         self.anomaly = AnomalyDetector(anomaly_detector_sm)
+        self.kalman = kalman
 
         # Plant --> KF
         # self.noise_sensor = NoiseFeedthrough(std_dev)

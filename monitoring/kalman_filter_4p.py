@@ -55,7 +55,7 @@ def construct_filter(step_size, std_dev,
 
     Inputs are: 
     [ [ on_heater ], 
-      [ in_room_ptemperature ]]
+      [ in_room_temperature ]]
     """
     A = sp.Matrix([
         [der_T_heater.diff(T_heater), der_T_heater.diff(T)],
@@ -92,8 +92,8 @@ def construct_filter(step_size, std_dev,
     f.F = dt_system.A
     f.B = dt_system.B
     f.H = dt_system.C
-    f.P = np.array([[0., 0.],
-                    [0., 0.]])
+    f.P = np.array([[1., 0.],
+                    [0., 1.]])
     f.R = np.array([[std_dev]])
     f.Q = Q_discrete_white_noise(dim=2, dt=step_size, var=std_dev ** 2)
 
@@ -128,7 +128,6 @@ class KalmanFilter4P(Model, IUpdateableKalmanFilter):
 
         self.save()
 
-
     def kalman_step(self, in_heater, in_room_T, in_T):
         self.filter.predict(u=np.array([
             [in_heater],
@@ -143,8 +142,10 @@ class KalmanFilter4P(Model, IUpdateableKalmanFilter):
         self.cached_T = next_x[1, 0]
         return super().discrete_step()
 
-    # Overrides
     def update_parameters(self, C_air, G_box, C_heater, G_heater):
+        # Reset output of the KF to the measurement
+        self.cached_T = self.in_T()
+        # Reconstruct filter
         self.filter = construct_filter(self.step_size, self.std_dev,
                                        C_air, G_box, C_heater, G_heater,
                                        self.cached_T_heater, self.cached_T)

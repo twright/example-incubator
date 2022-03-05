@@ -1,3 +1,4 @@
+import numpy as np
 from oomodelling import ModelSolver
 import matplotlib.pyplot as plt
 
@@ -29,12 +30,13 @@ class SelfAdaptationTests(CLIModeTest):
         G_heater = config["digital_twin"]["models"]["plant"]["param4"]["G_heater"]
         initial_box_temperature = config["digital_twin"]["models"]["plant"]["param4"]["initial_box_temperature"]
         initial_heat_temperature = config["digital_twin"]["models"]["plant"]["param4"]["initial_heat_temperature"]
-        std_dev = 0.1
+        std_dev = 1.4
         step_size = 3.0
         anomaly_threshold = 1.0
-        ensure_anomaly_timer = 6
-        conv_xatol = 0.1
-        conv_fatol = 0.1
+        ensure_anomaly_timer = 3
+        horizon_for_recalibration = 3*step_size
+        conv_xatol = 1.0
+        conv_fatol = 1.0
         max_iterations = 200
 
         kalman = KalmanFilter4P(std_dev, step_size,
@@ -47,7 +49,7 @@ class SelfAdaptationTests(CLIModeTest):
         pt_simulator = SystemModel4ParametersOpenLoopSimulator()
         ctrl = MockController()
         ctrl_optimizer = ControllerOptimizer(database, pt_simulator, ctrl, conv_xatol, conv_fatol, max_iterations)
-        anomaly_detector = AnomalyDetectorSM(anomaly_threshold, ensure_anomaly_timer, calibrator, kalman, ctrl_optimizer)
+        anomaly_detector = AnomalyDetectorSM(anomaly_threshold, ensure_anomaly_timer, horizon_for_recalibration, calibrator, kalman, ctrl_optimizer)
 
         m = SelfAdaptationScenario(n_samples_period, n_samples_heating,
                                    C_air, G_box, C_heater, G_heater,
@@ -66,7 +68,7 @@ class SelfAdaptationTests(CLIModeTest):
 
         ModelSolver().simulate(m, 0.0, 6000, 3.0)
 
-        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex='all')
+        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, sharex='all')
 
         ax1.plot(m.signals['time'], m.physical_twin.plant.signals['T'], label=f"- T")
         ax1.plot(m.signals['time'], m.kalman.signals['out_T'], linestyle="dashed", label=f"~ T")
@@ -85,6 +87,12 @@ class SelfAdaptationTests(CLIModeTest):
         ax3.plot(m.signals['time'], m.kalman.signals['out_T_heater'], linestyle="dashed", label=f"~ T")
 
         ax3.legend()
+
+        ax4.scatter(m.signals['time'],
+                    np.absolute(np.array(m.physical_twin.plant.signals['T']) - np.array(m.kalman.signals['out_T'])),
+                    label=f"Error")
+
+        ax4.legend()
 
         if self.ide_mode():
             print("Parameters:")
