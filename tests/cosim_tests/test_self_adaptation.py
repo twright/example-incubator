@@ -14,6 +14,7 @@ from models.self_adaptation.self_adaptation_model import SelfAdaptationScenario
 from monitoring.anomaly_detector import AnomalyDetectorSM
 from monitoring.kalman_filter_4p import KalmanFilter4P
 from self_adaptation.controller_optimizer import ControllerOptimizer
+from self_adaptation.supervisor import SupervisorSM
 from tests.cli_mode_test import CLIModeTest
 
 
@@ -55,12 +56,13 @@ class SelfAdaptationTests(CLIModeTest):
         ctrl = MockController()
         ctrl_optimizer = ControllerOptimizer(database, pt_simulator, ctrl, conv_xatol, conv_fatol, max_iterations, restrict_T_heater)
         anomaly_detector = AnomalyDetectorSM(anomaly_threshold, ensure_anomaly_timer, gather_data_timer, calibrator, kalman, ctrl_optimizer)
+        supervisor = SupervisorSM()
 
         m = SelfAdaptationScenario(n_samples_period, n_samples_heating,
                                    C_air, G_box, C_heater, G_heater,
                                    initial_box_temperature,
                                    initial_heat_temperature,
-                                   kalman, anomaly_detector,
+                                   kalman, anomaly_detector, supervisor,
                                    std_dev)
 
         # Inform mock db of plant _plant.

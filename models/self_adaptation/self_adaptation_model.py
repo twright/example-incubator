@@ -4,6 +4,7 @@ from models.physical_twin_models.system_model4_open_loop import SystemModel4Para
 from monitoring.anomaly_detector import AnomalyDetector, AnomalyDetectorSM
 from monitoring.kalman_filter_4p import KalmanFilter4P
 from monitoring.noise_model import NoiseFeedthrough
+from self_adaptation.supervisor import SupervisorSM, SupervisorModel
 
 
 class SelfAdaptationScenario(Model):
@@ -21,6 +22,8 @@ class SelfAdaptationScenario(Model):
                  kalman: KalmanFilter4P,
                  # Anomaly detector
                  anomaly_detector_sm: AnomalyDetectorSM,
+                 # Supervisor
+                 supervisor_sm: SupervisorSM,
                  std_dev
                  ):
         super().__init__()
@@ -38,6 +41,7 @@ class SelfAdaptationScenario(Model):
         # preventing the kalman filter from quickly recovering.
         self.anomaly = AnomalyDetector(anomaly_detector_sm)
         self.kalman = kalman
+        self.supervisor = SupervisorModel(supervisor_sm)
 
         # Plant --> KF
         # self.noise_sensor = NoiseFeedthrough(std_dev)
@@ -50,5 +54,9 @@ class SelfAdaptationScenario(Model):
         self.anomaly.predicted_temperature = self.kalman.out_T
         # Plant --> AnomalyDetector
         self.anomaly.real_temperature = self.physical_twin.plant.T
+
+        # KF --> Supervisor
+        self.supervisor.T = self.kalman.out_T
+        self.supervisor.T_heater = self.kalman.out_T_heater
 
         self.save()
