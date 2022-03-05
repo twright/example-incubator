@@ -17,7 +17,7 @@ class TwoParameterIncubatorPlant(Model):
         self.power_in = self.var(lambda: self.in_heater_voltage() * self.in_heater_current() if self.in_heater_on() else 0.0)
 
         self.G_box = self.input(lambda: G_box)
-        self.C_air = self.parameter(C_air)
+        self.C_air = self.input(lambda: C_air)
 
         self.T = self.state(initial_box_temperature)
 
@@ -25,6 +25,6 @@ class TwoParameterIncubatorPlant(Model):
 
         self.total_power_box = self.var(lambda: self.power_in() - self.power_out_box())
 
-        self.der('T', lambda: (1.0/self.C_air)*(self.total_power_box()))
+        self.der('T', lambda: (1.0/self.C_air())*(self.total_power_box()))
 
         self.save()

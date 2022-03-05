@@ -20,3 +20,6 @@ class IDatabase:
 
     def update_ctrl_parameters(self, n_samples_heating_new, n_samples_period_new):
         raise NotImplementedError("For subclasses")
+
+    def store_controller_optimal_policy(self, times, T, T_heater, heater_on):
+        raise NotImplementedError("For subclasses")

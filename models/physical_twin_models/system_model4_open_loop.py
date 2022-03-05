@@ -5,7 +5,7 @@ from models.plant_models.four_parameters_model.four_parameter_model import FourP
 
 
 class SystemModel4ParametersOpenLoopSimulator:
-    def run_simulation(self, tf,
+    def run_simulation(self, t0, tf,
                        # Initial state
                        initial_T, initial_T_heater, initial_room_T,
                        # Controller parameters
@@ -21,7 +21,7 @@ class SystemModel4ParametersOpenLoopSimulator:
         model.plant.in_room_temperature = lambda: initial_room_T
 
         # Run simulation
-        sol = ModelSolver().simulate(model, 0.0, tf, controller_step_size)
+        sol = ModelSolver().simulate(model, t0, tf, controller_step_size)
 
         # Return model that has the results
         return model

@@ -38,6 +38,8 @@ class SelfAdaptationTests(CLIModeTest):
         conv_xatol = 1.0
         conv_fatol = 1.0
         max_iterations = 200
+        restrict_T_heater = True
+        tf = 6000 if self.ide_mode() else 3000
 
         kalman = KalmanFilter4P(std_dev, step_size,
                                 C_air, G_box, C_heater, G_heater,
@@ -48,7 +50,7 @@ class SelfAdaptationTests(CLIModeTest):
         calibrator = Calibrator(database, plant_simulator, conv_xatol, conv_fatol, max_iterations)
         pt_simulator = SystemModel4ParametersOpenLoopSimulator()
         ctrl = MockController()
-        ctrl_optimizer = ControllerOptimizer(database, pt_simulator, ctrl, conv_xatol, conv_fatol, max_iterations)
+        ctrl_optimizer = ControllerOptimizer(database, pt_simulator, ctrl, conv_xatol, conv_fatol, max_iterations, restrict_T_heater)
         anomaly_detector = AnomalyDetectorSM(anomaly_threshold, ensure_anomaly_timer, horizon_for_recalibration, calibrator, kalman, ctrl_optimizer)
 
         m = SelfAdaptationScenario(n_samples_period, n_samples_heating,
@@ -66,6 +68,11 @@ class SelfAdaptationTests(CLIModeTest):
         # Wire in a custom function for the G_box input, so we can change it.
         m.physical_twin.plant.G_box = lambda: G_box if m.time() < 1000 else (G_box * 10 if m.time() < 2000 else G_box)
 
+        # Wire in a custom fucntion for the C_air parameter,
+        # so we mimick a different object being placed in the incubator.
+        # Commented out because it does not seem to work very well.
+        # m.physical_twin.plant.C_air = lambda: C_air if m.time() < 1000 else (C_air * 7 if m.time() < 2000 else C_air)
+
         ModelSolver().simulate(m, 0.0, 6000, 3.0)
 
         fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, sharex='all')
@@ -73,8 +80,11 @@ class SelfAdaptationTests(CLIModeTest):
         ax1.plot(m.signals['time'], m.physical_twin.plant.signals['T'], label=f"- T")
         ax1.plot(m.signals['time'], m.kalman.signals['out_T'], linestyle="dashed", label=f"~ T")
 
-        for (times, trajectory) in database.trajectory_history:
-            ax1.plot(times, trajectory[0, :], label=f"cal T")
+        for (times, trajectory) in database.plant_calibration_trajectory_history:
+            ax1.plot(times, trajectory[0, :], label=f"cal T", linestyle='dotted')
+
+        for (times, T, T_heater, heater_on) in database.ctrl_optimal_policy_history:
+            ax1.plot(times, T, label=f"opt T", linestyle='dotted')
 
         ax1.legend()
 
@@ -119,6 +129,7 @@ class MockController(IController):
 
 
 class MockDatabase(IDatabase):
+
     _plant: FourParameterIncubatorPlant = None
     _ctrl: ControllerOpenLoop = None
 
@@ -126,7 +137,8 @@ class MockDatabase(IDatabase):
     G_box: list[float] = []
     C_heater: list[float] = []
     G_heater: list[float] = []
-    trajectory_history: list = []
+    plant_calibration_trajectory_history: list = []
+    ctrl_optimal_policy_history: list = []
 
     n_samples_heating: list[float] = []
     n_samples_period: list[float] = []
@@ -136,11 +148,11 @@ class MockDatabase(IDatabase):
 
     def set_models(self, plant: FourParameterIncubatorPlant, ctrl: ControllerOpenLoop):
         assert len(self.C_air) == len(self.G_box) == len(self.C_heater) == len(self.G_heater) == \
-               len(self.trajectory_history) == len(self.n_samples_heating) == \
+               len(self.plant_calibration_trajectory_history) == len(self.n_samples_heating) == \
                len(self.n_samples_period) == 0
         self._plant = plant
         self._ctrl = ctrl
-        self.C_air.append(plant.C_air)
+        self.C_air.append(plant.C_air())
         self.G_box.append(plant.G_box())
         self.C_heater.append(plant.C_heater)
         self.G_heater.append(plant.G_heater)
@@ -155,7 +167,7 @@ class MockDatabase(IDatabase):
         return signals, t_start_idx, t_end_idx
 
     def store_calibrated_trajectory(self, times, calibrated_sol):
-        self.trajectory_history.append((times, calibrated_sol))
+        self.plant_calibration_trajectory_history.append((times, calibrated_sol))
 
     def update_plant_parameters(self, C_air_new, G_box_new, C_heater, G_heater):
         self.C_air.append(C_air_new)
@@ -167,7 +179,7 @@ class MockDatabase(IDatabase):
         return self.C_air[-1], self.G_box[-1], self.C_heater[-1], self.G_heater[-1]
 
     def get_plant_snapshot(self):
-        return self._plant.T(), self._plant.T_heater(), self._plant.in_room_temperature()
+        return self._plant.time(), self._plant.T(), self._plant.T_heater(), self._plant.in_room_temperature()
 
     def get_ctrl_parameters(self):
         return self.n_samples_heating[-1], self.n_samples_period[-1], self.ctrl_step_size
@@ -175,3 +187,6 @@ class MockDatabase(IDatabase):
     def update_ctrl_parameters(self, n_samples_heating_new, n_samples_period_new):
         self.n_samples_heating.append(n_samples_heating_new)
         self.n_samples_period.append(n_samples_period_new)
+
+    def store_controller_optimal_policy(self, time, T, T_heater, heater_on):
+        self.ctrl_optimal_policy_history.append((time, T, T_heater, heater_on))
