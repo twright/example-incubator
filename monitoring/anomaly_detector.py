@@ -83,7 +83,6 @@ class AnomalyDetectorSM:
             return
 
 
-
 class AnomalyDetector(Model):
     def __init__(self,
                  anomaly_detector_sm: AnomalyDetectorSM
