@@ -6,7 +6,7 @@ from self_adaptation.controller_optimizer import ControllerOptimizer
 from interfaces.updateable_kalman_filter import IUpdateableKalmanFilter
 
 
-class AnomalyDetectorSM:
+class SelfAdaptationManager:
     def __init__(self, anomaly_threshold, ensure_anomaly_timer, gather_data_timer,
                  calibrator: Calibrator,
                  kalman_filter: IUpdateableKalmanFilter,
@@ -83,16 +83,16 @@ class AnomalyDetectorSM:
             return
 
 
-class AnomalyDetector(Model):
+class SelfAdaptationModel(Model):
     def __init__(self,
-                 anomaly_detector_sm: AnomalyDetectorSM
+                 manager: SelfAdaptationManager
                  ):
         super().__init__()
 
         self.in_reset = self.input(lambda: False)
         self.real_temperature = self.input(lambda: 0.0)
         self.predicted_temperature = self.input(lambda: 0.0)
-        self.state_machine = anomaly_detector_sm
+        self.state_machine = manager
 
         self.anomaly_detected = self.var(lambda: self.state_machine.anomaly_detected)
 

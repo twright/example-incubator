@@ -1,9 +1,8 @@
 from oomodelling import Model
 
 from models.physical_twin_models.system_model4_open_loop import SystemModel4ParametersOpenLoop
-from monitoring.anomaly_detector import AnomalyDetector, AnomalyDetectorSM
+from self_adaptation.self_adaptation_manager import SelfAdaptationModel, SelfAdaptationManager
 from monitoring.kalman_filter_4p import KalmanFilter4P
-from monitoring.noise_model import NoiseFeedthrough
 from self_adaptation.supervisor import SupervisorSM, SupervisorModel
 
 
@@ -21,7 +20,7 @@ class SelfAdaptationScenario(Model):
                  # Kalman Filter
                  kalman: KalmanFilter4P,
                  # Anomaly detector
-                 anomaly_detector_sm: AnomalyDetectorSM,
+                 anomaly_detector_sm: SelfAdaptationManager,
                  # Supervisor
                  supervisor_sm: SupervisorSM,
                  std_dev
@@ -39,7 +38,7 @@ class SelfAdaptationScenario(Model):
         # Note the relative order between anomaly detector and Kalman filter.
         # We assign anomaly first so that it will step before the kalman filter does,
         # preventing the kalman filter from quickly recovering.
-        self.anomaly = AnomalyDetector(anomaly_detector_sm)
+        self.anomaly = SelfAdaptationModel(anomaly_detector_sm)
         self.kalman = kalman
         self.supervisor = SupervisorModel(supervisor_sm)
 

@@ -10,8 +10,8 @@ from digital_twin.simulator.plant_simulator import PlantSimulator4Params
 from models.controller_models.controller_open_loop import ControllerOpenLoop
 from models.physical_twin_models.system_model4_open_loop import SystemModel4ParametersOpenLoopSimulator
 from models.plant_models.four_parameters_model.four_parameter_model import FourParameterIncubatorPlant
-from models.self_adaptation.self_adaptation_model import SelfAdaptationScenario
-from monitoring.anomaly_detector import AnomalyDetectorSM
+from models.self_adaptation.self_adaptation_scenario import SelfAdaptationScenario
+from self_adaptation.self_adaptation_manager import SelfAdaptationManager
 from monitoring.kalman_filter_4p import KalmanFilter4P
 from self_adaptation.controller_optimizer import ControllerOptimizer
 from self_adaptation.supervisor import SupervisorSM
@@ -59,7 +59,7 @@ class SelfAdaptationTests(CLIModeTest):
         pt_simulator = SystemModel4ParametersOpenLoopSimulator()
         ctrl = MockController()
         ctrl_optimizer = ControllerOptimizer(database, pt_simulator, ctrl, conv_xatol, conv_fatol, max_iterations, restrict_T_heater, desired_temperature, max_t_heater)
-        anomaly_detector = AnomalyDetectorSM(anomaly_threshold, ensure_anomaly_timer, gather_data_timer, calibrator, kalman, ctrl_optimizer)
+        anomaly_detector = SelfAdaptationManager(anomaly_threshold, ensure_anomaly_timer, gather_data_timer, calibrator, kalman, ctrl_optimizer)
         supervisor = SupervisorSM(ctrl_optimizer, desired_temperature, max_t_heater, restrict_T_heater, trigger_optimization_threshold, wait_til_supervising_timer)
 
         m = SelfAdaptationScenario(n_samples_period, n_samples_heating,
@@ -82,7 +82,7 @@ class SelfAdaptationTests(CLIModeTest):
         # Commented out because it does not seem to work very well.
         # m.physical_twin.plant.C_air = lambda: C_air if m.time() < 1000 else (C_air * 7 if m.time() < 2000 else C_air)
 
-        ModelSolver().simulate(m, 0.0, 6000, 3.0)
+        ModelSolver().simulate(m, 0.0, tf, 3.0)
 
         fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, sharex='all')
 
