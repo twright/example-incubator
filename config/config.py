@@ -25,7 +25,7 @@ def resource_file_path(filename):
     raise ValueError("File not found: {filename}")
 
 
-def load_config(config_file_name):
+def load_config(config_file_name) -> dict:
     file_path = resource_file_path(config_file_name)
     config = ConfigFactory.parse_file(file_path)
     return config
