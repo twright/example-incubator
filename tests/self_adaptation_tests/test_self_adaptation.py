@@ -33,7 +33,7 @@ class SelfAdaptationTests(CLIModeTest):
         initial_heat_temperature = config["digital_twin"]["models"]["plant"]["param4"]["initial_heat_temperature"]
         std_dev = 1.4
         step_size = 3.0
-        anomaly_threshold = 0.2
+        anomaly_threshold = 0.3
         # Time spent before declaring that there is an self_adaptation_manager, after the first time the self_adaptation_manager occurred.
         ensure_anomaly_timer = 1
         # Time spent, after the self_adaptation_manager was declared as detected, just so enough data about the system is gathered.

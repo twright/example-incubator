@@ -35,16 +35,22 @@ class SelfAdaptationManager:
         self.anomaly_detected = False
         self.time_anomaly_start = -1.0
 
-    def step(self, real_temperature, predicted_temperature, time_s):
+    def step(self, real_temperature, predicted_temperature, time_s, skip_anomaly_detection=False):
         self.temperature_residual_abs = np.absolute(real_temperature - predicted_temperature)
 
         if self.current_state == "Listening":
             assert not self.anomaly_detected
             assert self.next_action_timer < 0
-            if self.temperature_residual_abs >= self.anomaly_threshold:
+            if skip_anomaly_detection:
                 self.time_anomaly_start = time_s
-                self.next_action_timer = self.ensure_anomaly_timer
-                self.current_state = "EnsuringAnomaly"
+                self.current_state = "GatheringData"
+                self.next_action_timer = self.gather_data_timer
+                self.anomaly_detected = True
+            else:
+                if self.temperature_residual_abs >= self.anomaly_threshold:
+                    self.time_anomaly_start = time_s
+                    self.next_action_timer = self.ensure_anomaly_timer
+                    self.current_state = "EnsuringAnomaly"
             return
         if self.current_state == "EnsuringAnomaly":
             assert not self.anomaly_detected

@@ -25,12 +25,12 @@ class ControllerOptimizer:
 
     def optimize_controller(self):
         # Get system snapshot
-        time, T, T_heater, room_T = self.database.get_plant_snapshot()
+        time_s, T, T_heater, room_T = self.database.get_plant_snapshot()
 
         # Get system parameters
         C_air, G_box, C_heater, G_heater = self.database.get_plant4_parameters()
 
-        time_til_steady_state = time + 3000  # Obtained from empirical experiments
+        time_til_steady_state = time_s + 3000  # Obtained from empirical experiments
 
         # Get current controller parameters
         n_samples_heating, n_samples_period, controller_step_size = self.database.get_ctrl_parameters()
@@ -39,7 +39,7 @@ class ControllerOptimizer:
         def cost(p):
             n_samples_heating_guess = round(p)
 
-            model = self.pt_simulator.run_simulation(time, time_til_steady_state, T, T_heater, room_T,
+            model = self.pt_simulator.run_simulation(time_s, time_til_steady_state, T, T_heater, room_T,
                                                      n_samples_heating_guess, n_samples_period, controller_step_size,
                                                      C_air, G_box, C_heater, G_heater)
             # Error is how far from the desired temperature the simulation is, for a few seconds in steady state.
@@ -82,9 +82,9 @@ class ControllerOptimizer:
         assert n_samples_heating_new is not None
         # Record parameters and update controller
         self.controller.set_new_parameters(n_samples_heating_new, n_samples_period)
-        self.database.store_new_ctrl_parameters(time, n_samples_heating_new, n_samples_period, controller_step_size)
+        self.database.store_new_ctrl_parameters(time_s, n_samples_heating_new, n_samples_period, controller_step_size)
         # Store predicted simulation, for debugging purposes
-        model = self.pt_simulator.run_simulation(time, time_til_steady_state, T, T_heater, room_T,
+        model = self.pt_simulator.run_simulation(time_s, time_til_steady_state, T, T_heater, room_T,
                                                  n_samples_heating_new, n_samples_period, controller_step_size,
                                                  C_air, G_box, C_heater, G_heater)
         self.database.store_controller_optimal_policy(model.signals['time'],
