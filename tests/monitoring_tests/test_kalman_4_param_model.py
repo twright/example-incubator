@@ -27,7 +27,7 @@ class TestKalmanFilter(CLIModeTest):
                                      normalize_time=False,
                                      convert_to_seconds=True)
         events = pandas.read_csv(resource_file_path("./datasets/lid_opening_experiment_jan_2021/events.csv"))
-        events["timestamp"] = pandas.to_datetime(events["time"], unit=time_unit)
+        events["timestamp_ns"] = pandas.to_datetime(events["time"], unit=time_unit)
 
         # Inputs to _plant
         measurements_heater = np.array([1.0 if b else 0.0 for b in data["heater_on"]])
@@ -65,21 +65,21 @@ class TestKalmanFilter(CLIModeTest):
         fig = plotly_incubator_data(data,
                                     compare_to={
                                         "4pModel": {
-                                            "timestamp": data["timestamp"],
+                                            "timestamp_ns": data["timestamp_ns"],
                                             "T": results_4p.signals["T"],
                                         },
                                         "Kalman": {
-                                            "timestamp": data["timestamp"],
+                                            "timestamp_ns": data["timestamp_ns"],
                                             "T": kalman_prediction[:, 1]
                                         },
                                     },
                                     heater_T_data={
                                         "4pModel": {
-                                            "timestamp": data["timestamp"],
+                                            "timestamp_ns": data["timestamp_ns"],
                                             "T_heater": results_4p.signals["T_heater"],
                                         },
                                         "Kalman": {
-                                            "timestamp": data["timestamp"],
+                                            "timestamp_ns": data["timestamp_ns"],
                                             "T_heater": kalman_prediction[:, 0]
                                         },
                                     },

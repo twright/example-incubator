@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.optimize import minimize_scalar
 
-from interfaces.controller import IController
+from interfaces.parametric_controller import IParametricController
 from interfaces.database import IDatabase
 from models.physical_twin_models.system_model4_open_loop import SystemModel4ParametersOpenLoopSimulator
 
@@ -10,7 +10,7 @@ class ControllerOptimizer:
 
     def __init__(self, database: IDatabase,
                  pt_simulator: SystemModel4ParametersOpenLoopSimulator,
-                 controller: IController,
+                 controller: IParametricController,
                  conv_xatol, conv_fatol, max_iterations, restrict_T_heater,
                  desired_temperature, max_t_heater):
         self.conv_xatol = conv_xatol
@@ -82,7 +82,7 @@ class ControllerOptimizer:
         assert n_samples_heating_new is not None
         # Record parameters and update controller
         self.controller.set_new_parameters(n_samples_heating_new, n_samples_period)
-        self.database.update_ctrl_parameters(n_samples_heating_new, n_samples_period)
+        self.database.store_new_ctrl_parameters(time, n_samples_heating_new, n_samples_period, controller_step_size)
         # Store predicted simulation, for debugging purposes
         model = self.pt_simulator.run_simulation(time, time_til_steady_state, T, T_heater, room_T,
                                                  n_samples_heating_new, n_samples_period, controller_step_size,

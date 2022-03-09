@@ -45,7 +45,7 @@ def plotly_incubator_data(data, compare_to=None, heater_T_data=None, events=None
 
     x_title = "Timestamp" if show_hr_time else "Time (s)"
 
-    time_field = "timestamp" if show_hr_time else "time"
+    time_field = "timestamp_ns" if show_hr_time else "time"
 
     fig = make_subplots(rows=nRows, cols=1, shared_xaxes=True,
                         x_title=x_title,
@@ -61,9 +61,9 @@ def plotly_incubator_data(data, compare_to=None, heater_T_data=None, events=None
 
     if events is not None:
         for i, r in events.iterrows():
-            # Get the closest timestamp to the event time
+            # Get the closest timestamp_ns to the event time
             closest_ts = min(data[time_field], key=lambda x:abs(x-r[time_field]))
-            # Get the average temperature for that timestamp
+            # Get the average temperature for that timestamp_ns
             avg_temp = data.iloc[data.index[data[time_field] == closest_ts]]["average_temperature"].iloc[0]
 
             fig.add_annotation(x=r[time_field], y=avg_temp,

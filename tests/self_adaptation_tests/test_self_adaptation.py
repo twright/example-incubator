@@ -3,7 +3,7 @@ from oomodelling import ModelSolver
 import matplotlib.pyplot as plt
 
 from calibration.calibrator import Calibrator
-from interfaces.controller import IController
+from interfaces.parametric_controller import IParametricController
 from interfaces.database import IDatabase
 from config.config import load_config
 from digital_twin.simulator.plant_simulator import PlantSimulator4Params
@@ -33,10 +33,10 @@ class SelfAdaptationTests(CLIModeTest):
         initial_heat_temperature = config["digital_twin"]["models"]["plant"]["param4"]["initial_heat_temperature"]
         std_dev = 1.4
         step_size = 3.0
-        anomaly_threshold = 1.0
-        # Time spent before declaring that there is an anomaly, after the first time the anomaly occurred.
-        ensure_anomaly_timer = 3
-        # Time spent, after the anomaly was declared as detected, just so enough data about the system is gathered.
+        anomaly_threshold = 0.2
+        # Time spent before declaring that there is an self_adaptation_manager, after the first time the self_adaptation_manager occurred.
+        ensure_anomaly_timer = 1
+        # Time spent, after the self_adaptation_manager was declared as detected, just so enough data about the system is gathered.
         # The data used for recalibration will be in interval [time_first_occurrence, time_data_gathered]
         gather_data_timer = 6
         conv_xatol = 0.1
@@ -107,10 +107,14 @@ class SelfAdaptationTests(CLIModeTest):
 
         ax3.legend()
 
-        ax4.scatter(m.signals['time'],
-                    np.absolute(np.array(m.physical_twin.plant.signals['T']) - np.array(m.kalman.signals['out_T'])),
-                    label=f"Error")
+        # The following plot is incorrect, since it does not match with the actual residual computed by the self_adaptation_manager
+        # ax4.scatter(m.signals['time'],
+        #             np.absolute(np.array(m.physical_twin.plant.signals['T']) - np.array(m.kalman.signals['out_T'])),
+        #             label=f"Error")
 
+        ax4.scatter(m.signals['time'],
+                    m.self_adaptation_manager.signals["temperature_residual_abs"],
+                    label=f"Error")
         ax4.legend()
 
         if self.ide_mode():
@@ -122,7 +126,7 @@ class SelfAdaptationTests(CLIModeTest):
             plt.show()
 
 
-class MockController(IController):
+class MockController(IParametricController):
 
     controller: ControllerOpenLoop = None
 
@@ -168,17 +172,17 @@ class MockDatabase(IDatabase):
         self.n_samples_heating.append(ctrl.param_n_samples_heating)
         self.n_samples_period.append(ctrl.param_n_samples_period)
 
-    def get_plant_signals_between(self, t_start, t_end):
+    def get_plant_signals_between(self, t_start_s, t_end_s):
         signals = self._plant.signals
-        # Find indexes for t_start and t_end
-        t_start_idx = next(i for i, t in enumerate(signals["time"]) if t >= t_start)
-        t_end_idx = next(i for i, t in enumerate(signals["time"]) if t >= t_end)
+        # Find indexes for t_start_s and t_end_s
+        t_start_idx = next(i for i, t in enumerate(signals["time"]) if t >= t_start_s)
+        t_end_idx = next(i for i, t in enumerate(signals["time"]) if t >= t_end_s)
         return signals, t_start_idx, t_end_idx
 
     def store_calibrated_trajectory(self, times, calibrated_sol):
         self.plant_calibration_trajectory_history.append((times, calibrated_sol))
 
-    def update_plant_parameters(self, C_air_new, G_box_new, C_heater, G_heater):
+    def store_new_plant_parameters(self, start_time_s, C_air_new, G_box_new, C_heater, G_heater):
         self.C_air.append(C_air_new)
         self.G_box.append(G_box_new)
         self.C_heater.append(C_heater)
@@ -193,7 +197,7 @@ class MockDatabase(IDatabase):
     def get_ctrl_parameters(self):
         return self.n_samples_heating[-1], self.n_samples_period[-1], self.ctrl_step_size
 
-    def update_ctrl_parameters(self, n_samples_heating_new, n_samples_period_new):
+    def store_new_ctrl_parameters(self, start_time_s, n_samples_heating_new, n_samples_period_new, controller_step_size):
         self.n_samples_heating.append(n_samples_heating_new)
         self.n_samples_period.append(n_samples_period_new)
 

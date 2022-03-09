@@ -18,9 +18,11 @@ class SelfAdaptationManager:
         self.anomaly_threshold = anomaly_threshold
         self.gather_data_timer = gather_data_timer
         self.ensure_anomaly_timer = ensure_anomaly_timer
+        self.temperature_residual_abs = 0.0
         self.anomaly_detected = False
         self.kalman_filter = kalman_filter
         self.controller_optimizer = controller_optimizer
+
 
         # Holds the next sample for which an action has to be taken.
         self.next_action_timer = -1
@@ -33,14 +35,14 @@ class SelfAdaptationManager:
         self.anomaly_detected = False
         self.time_anomaly_start = -1.0
 
-    def step(self, real_temperature, predicted_temperature, time):
-        temperature_residual_abs = np.absolute(real_temperature - predicted_temperature)
+    def step(self, real_temperature, predicted_temperature, time_s):
+        self.temperature_residual_abs = np.absolute(real_temperature - predicted_temperature)
 
         if self.current_state == "Listening":
             assert not self.anomaly_detected
             assert self.next_action_timer < 0
-            if temperature_residual_abs >= self.anomaly_threshold:
-                self.time_anomaly_start = time
+            if self.temperature_residual_abs >= self.anomaly_threshold:
+                self.time_anomaly_start = time_s
                 self.next_action_timer = self.ensure_anomaly_timer
                 self.current_state = "EnsuringAnomaly"
             return
@@ -51,12 +53,12 @@ class SelfAdaptationManager:
             if self.next_action_timer > 0:
                 self.next_action_timer -= 1
 
-            if temperature_residual_abs < self.anomaly_threshold:
+            if self.temperature_residual_abs < self.anomaly_threshold:
                 self.reset()
                 return
 
             if self.next_action_timer == 0:
-                assert temperature_residual_abs >= self.anomaly_threshold
+                assert self.temperature_residual_abs >= self.anomaly_threshold
                 self.current_state = "GatheringData"
                 self.next_action_timer = self.gather_data_timer
                 self.anomaly_detected = True
@@ -75,7 +77,8 @@ class SelfAdaptationManager:
             return
         if self.current_state == "Calibrating":
             assert self.time_anomaly_start >= 0.0
-            success, C_air, G_box, C_heater, G_heater = self.calibrator.calibrate(self.time_anomaly_start, time)
+            assert self.time_anomaly_start <= time_s
+            success, C_air, G_box, C_heater, G_heater = self.calibrator.calibrate(self.time_anomaly_start, time_s)
             if success:
                 self.kalman_filter.update_parameters(C_air, G_box, C_heater, G_heater)
                 self.controller_optimizer.optimize_controller()
@@ -95,6 +98,7 @@ class SelfAdaptationModel(Model):
         self.state_machine = manager
 
         self.anomaly_detected = self.var(lambda: self.state_machine.anomaly_detected)
+        self.temperature_residual_abs = self.var(lambda: self.state_machine.temperature_residual_abs)
 
         self.save()
 

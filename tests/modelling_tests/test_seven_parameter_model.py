@@ -176,22 +176,22 @@ class SevenParameterModelTests(CLIModeTest):
 
         results_2p, sol_2p = run_experiment_two_parameter_model(data, two_param_model_params)
 
-        l.info(f"Experiment time from {data.iloc[0]['timestamp']} to {data.iloc[-1]['timestamp']}")
+        l.info(f"Experiment time from {data.iloc[0]['timestamp_ns']} to {data.iloc[-1]['timestamp_ns']}")
 
         fig = plotly_incubator_data(data,
                                     compare_to={
                                         "T(7)": {
-                                            "timestamp": pandas.to_datetime(results.signals["time"], unit='s'),
+                                            "timestamp_ns": pandas.to_datetime(results.signals["time"], unit='s'),
                                             "T": results.signals["T"],
                                             # "T_object": results.signals["T_object"],
                                             "in_lid_open": results.signals["in_lid_open"],
                                         },
                                         "T(4)": {
-                                            "timestamp": pandas.to_datetime(results_4.signals["time"], unit='s'),
+                                            "timestamp_ns": pandas.to_datetime(results_4.signals["time"], unit='s'),
                                             "T": results_4.signals["T"]
                                         },
                                         "T(2)": {
-                                            "timestamp": pandas.to_datetime(results_2p.signals["time"], unit='s'),
+                                            "timestamp_ns": pandas.to_datetime(results_2p.signals["time"], unit='s'),
                                             "T": results_2p.signals["T"]
                                         }
                                     },

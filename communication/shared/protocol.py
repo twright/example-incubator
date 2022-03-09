@@ -3,6 +3,7 @@ import json
 ENCODING = "ascii"
 
 ROUTING_KEY_STATE = "incubator.record.driver.state"
+ROUTING_KEY_UPDATE_CTRL_PARAMS = "incubator.update.open_loop_controller.parameters"
 ROUTING_KEY_COSIM_PARAM = "incubator.cosim.controller.parameters"
 ROUTING_KEY_CONTROLLER = "incubator.record.controller.state"
 ROUTING_KEY_HEATER = "incubator.hardware.gpio.heater.on"

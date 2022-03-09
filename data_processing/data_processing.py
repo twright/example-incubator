@@ -30,7 +30,7 @@ def load_timestamped_data(filepath, desired_timeframe, time_unit, normalize_time
     indices = range(start_idx, end_idx + 1)
     csv = csv.iloc[indices]
 
-    csv["timestamp"] = pandas.to_datetime(csv["time"], unit=time_unit)
+    csv["timestamp_ns"] = pandas.to_datetime(csv["time"], unit=time_unit)
     # normalize time
     if normalize_time:
         csv["time"] = csv["time"] - csv.iloc[0]["time"]

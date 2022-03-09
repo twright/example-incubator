@@ -61,7 +61,7 @@ class TestsModelling(CLIModeTest):
                                     compare_to={
                                         "T(1)": {
                                             "time": model.signals["time"],
-                                            "timestamp": model.signals["time"],
+                                            "timestamp_ns": model.signals["time"],
                                             "T": model.signals["T"],
                                         }
                                     },

@@ -36,7 +36,7 @@ class TestPlotData(CLIModeTest):
                                  convert_to_seconds=True)
 
         if self.ide_mode():
-            print(f"Experiment time from {data.iloc[0]['timestamp']} to {data.iloc[-1]['timestamp']}")
+            print(f"Experiment time from {data.iloc[0]['timestamp_ns']} to {data.iloc[-1]['timestamp_ns']}")
 
         params4pmodel = [145.69782402,  # C_air
                          0.79154106,  # G_box
@@ -48,7 +48,7 @@ class TestPlotData(CLIModeTest):
                                     compare_to={
                                         "T(4)": {
                                             "time": results4p.signals["time"],
-                                            "timestamp": pandas.to_datetime(results4p.signals["time"], unit='s'),
+                                            "timestamp_ns": pandas.to_datetime(results4p.signals["time"], unit='s'),
                                             "T": results4p.signals["T"],
                                         }
                                     },
@@ -71,7 +71,7 @@ class TestPlotData(CLIModeTest):
                                  convert_to_seconds=True)
 
         if self.ide_mode():
-            print(f"Experiment time from {data.iloc[0]['timestamp']} to {data.iloc[-1]['timestamp']}")
+            print(f"Experiment time from {data.iloc[0]['timestamp_ns']} to {data.iloc[-1]['timestamp_ns']}")
 
         params4pmodel = [145.69782402,  # C_air
                          0.79154106,  # G_box
@@ -82,7 +82,7 @@ class TestPlotData(CLIModeTest):
         fig = plotly_incubator_data(data,
                                     compare_to={
                                         "T(4)": {
-                                            "timestamp": pandas.to_datetime(results4p.signals["time"], unit='s'),
+                                            "timestamp_ns": pandas.to_datetime(results4p.signals["time"], unit='s'),
                                             "T": results4p.signals["T"],
                                         }
                                     },

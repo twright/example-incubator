@@ -5,6 +5,7 @@ import logging
 
 from communication.server.rabbitmq import Rabbitmq, ROUTING_KEY_STATE, ROUTING_KEY_HEATER, ROUTING_KEY_FAN, decode_json, \
     from_ns_to_s, ROUTING_KEY_CONTROLLER
+from communication.shared.protocol import ROUTING_KEY_UPDATE_CTRL_PARAMS
 from models.controller_models.controller_open_loop import ControllerOpenLoopSM
 
 LINE_PRINT_FORMAT = {
@@ -24,7 +25,7 @@ class ControllerPhysicalOpenLoop:
                  n_samples_period,  # Total number of samples considered
                  n_samples_heating,  # Number of samples (out of n_samples_period) that the heater is on.
                  ):
-        self._l = logging.getLogger("ControllerPhysical")
+        self._l = logging.getLogger("OpenLoopControllerPhysical")
 
         self.box_air_temperature = None
         self.room_temperature = None
@@ -32,7 +33,6 @@ class ControllerPhysicalOpenLoop:
 
         self.n_samples_period = n_samples_period
         self.n_samples_heating = n_samples_heating
-
         self.state_machine = ControllerOpenLoopSM(n_samples_period, n_samples_heating)
 
         self.rabbitmq = Rabbitmq(**rabbit_config)
@@ -61,6 +61,8 @@ class ControllerPhysicalOpenLoop:
         self.safe_protocol()
         self._l.debug("Starting Fan")
         self._set_fan_on(True)
+        self.rabbitmq.subscribe(routing_key=ROUTING_KEY_UPDATE_CTRL_PARAMS,
+                                on_message_callback=self.update_parameters)
         self.rabbitmq.subscribe(routing_key=ROUTING_KEY_STATE,
                                 on_message_callback=self.control_loop_callback)
 
@@ -121,6 +123,17 @@ class ControllerPhysicalOpenLoop:
 
         assert self.heater_ctrl is not None
         self._set_heater_on(self.heater_ctrl)
+
+    def update_parameters(self, ch, method, properties, body_json):
+        self._l.debug("Request to update open loop controller parameters")
+
+        n_samples_heating = body_json["n_samples_heating"]
+        n_samples_period = body_json["n_samples_period"]
+        self._l.debug(f"Updating open loop controller parameters to: {n_samples_heating, n_samples_period}")
+
+        self.n_samples_period = n_samples_period
+        self.n_samples_heating = n_samples_heating
+        self.state_machine = ControllerOpenLoopSM(n_samples_period, n_samples_heating)
 
     def start_control(self):
         try:

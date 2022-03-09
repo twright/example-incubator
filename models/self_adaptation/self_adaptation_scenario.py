@@ -17,11 +17,8 @@ class SelfAdaptationScenario(Model):
                  G_heater,
                  initial_box_temperature,
                  initial_heat_temperature,
-                 # Kalman Filter
                  kalman: KalmanFilter4P,
-                 # Anomaly detector
-                 anomaly_detector_sm: SelfAdaptationManager,
-                 # Supervisor
+                 self_adaptation_manager: SelfAdaptationManager,
                  supervisor_sm: SupervisorSM,
                  std_dev
                  ):
@@ -35,11 +32,11 @@ class SelfAdaptationScenario(Model):
                                                             G_heater, initial_box_temperature,
                                                             initial_heat_temperature)
 
-        # Note the relative order between anomaly detector and Kalman filter.
-        # We assign anomaly first so that it will step before the kalman filter does,
+        # Note the relative order between self_adaptation_manager detector and Kalman filter.
+        # We assign self_adaptation_manager first so that it will step before the kalman filter does,
         # preventing the kalman filter from quickly recovering.
-        self.anomaly = SelfAdaptationModel(anomaly_detector_sm)
         self.kalman = kalman
+        self.self_adaptation_manager = SelfAdaptationModel(self_adaptation_manager)
         self.supervisor = SupervisorModel(supervisor_sm)
 
         # Plant --> KF
@@ -50,9 +47,9 @@ class SelfAdaptationScenario(Model):
         self.kalman.in_heater_on = self.physical_twin.ctrl.heater_on
 
         # KF --> AnomalyDetector
-        self.anomaly.predicted_temperature = self.kalman.out_T
+        self.self_adaptation_manager.predicted_temperature = self.kalman.out_T
         # Plant --> AnomalyDetector
-        self.anomaly.real_temperature = self.physical_twin.plant.T
+        self.self_adaptation_manager.real_temperature = self.physical_twin.plant.T
 
         # KF --> Supervisor
         self.supervisor.T = self.kalman.out_T

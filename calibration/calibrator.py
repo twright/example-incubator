@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 from scipy.optimize import minimize
 
@@ -12,6 +14,7 @@ def compute_error(tracked_solutions, new_state_trajectories):
 
 class Calibrator:
     def __init__(self, database: IDatabase, plant_simulator: PlantSimulator4Params, conv_xatol, conv_fatol, max_iterations):
+        self._l = logging.getLogger("Calibrator")
         self.database = database
         self.plant_simulator = plant_simulator
         self.conv_xatol = conv_xatol
@@ -19,14 +22,14 @@ class Calibrator:
         self.max_iterations = max_iterations
 
     def calibrate(self, t_start, t_end):
-
+        self._l.debug(f"Starting calibration between in times [{t_start}, {t_end}]")
         signals, t_start_idx, t_end_idx = self.database.get_plant_signals_between(t_start, t_end)
         times = signals["time"][t_start_idx:t_end_idx]
         reference_T = signals["T"][t_start_idx:t_end_idx]
         ctrl_signal = signals["in_heater_on"][t_start_idx:t_end_idx]
         reference_T_heater = signals["T_heater"][t_start_idx:t_end_idx]
         room_T = signals["in_room_temperature"][t_start_idx:t_end_idx]
-        assert len(reference_T) == len(reference_T_heater) == len(times) == len(ctrl_signal)
+        assert len(reference_T) == len(times) == len(ctrl_signal) == len(reference_T_heater)
 
         tracked_solutions = np.array([reference_T, reference_T_heater])
 
@@ -58,7 +61,7 @@ class Calibrator:
                                                                  C_air_new, G_box_new, C_heater, G_heater)
 
             self.database.store_calibrated_trajectory(times, calibrated_sol.y[1:])
-            self.database.update_plant_parameters(C_air_new, G_box_new, C_heater, G_heater)
+            self.database.store_new_plant_parameters(times[0], C_air_new, G_box_new, C_heater, G_heater)
             return True, C_air_new, G_box_new, C_heater, G_heater
         else:
             return False, C_air, G_box, C_heater, G_heater
