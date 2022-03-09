@@ -32,9 +32,6 @@ class SelfAdaptationScenario(Model):
                                                             G_heater, initial_box_temperature,
                                                             initial_heat_temperature)
 
-        # Note the relative order between self_adaptation_manager detector and Kalman filter.
-        # We assign self_adaptation_manager first so that it will step before the kalman filter does,
-        # preventing the kalman filter from quickly recovering.
         self.kalman = kalman
         self.self_adaptation_manager = SelfAdaptationModel(self_adaptation_manager)
         self.supervisor = SupervisorModel(supervisor_sm)
