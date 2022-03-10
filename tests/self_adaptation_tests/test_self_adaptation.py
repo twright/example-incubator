@@ -61,7 +61,7 @@ class SelfAdaptationTests(CLIModeTest):
         ctrl = MockController()
         ctrl_optimizer = ControllerOptimizer(database, pt_simulator, ctrl, conv_xatol, conv_fatol, max_iterations, restrict_T_heater, desired_temperature, max_t_heater)
         anomaly_detector = SelfAdaptationManager(anomaly_threshold, ensure_anomaly_timer, gather_data_timer, calibrator, kalman, ctrl_optimizer)
-        supervisor = SupervisorSM(ctrl_optimizer, desired_temperature, max_t_heater, restrict_T_heater, trigger_optimization_threshold, wait_til_supervising_timer)
+        supervisor = SupervisorSM(ctrl_optimizer, desired_temperature, max_t_heater, trigger_optimization_threshold, wait_til_supervising_timer)
 
         m = SelfAdaptationScenario(n_samples_period, n_samples_heating,
                                    C_air, G_box, C_heater, G_heater,

@@ -6,13 +6,11 @@ from self_adaptation.controller_optimizer import ControllerOptimizer
 
 class SupervisorSM:
     def __init__(self, controller_optimizer: ControllerOptimizer,
-                 desired_temperature, max_t_heater, restrict_T_heater, trigger_optimization_threshold, wait_til_supervising_timer):
+                 desired_temperature, max_t_heater, trigger_optimization_threshold, wait_til_supervising_timer):
         # Constants
         self.controller_optimizer = controller_optimizer
         self.desired_temperature = desired_temperature
         self.max_t_heater = max_t_heater
-        # TODO Remove this unused attribute.
-        self.restrict_T_heater = restrict_T_heater
         self.trigger_optimization_threshold = trigger_optimization_threshold
         self.wait_til_supervising_timer = wait_til_supervising_timer
 
