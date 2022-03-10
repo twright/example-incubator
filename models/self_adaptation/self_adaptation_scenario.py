@@ -17,6 +17,7 @@ class SelfAdaptationScenario(Model):
                  G_heater,
                  initial_box_temperature,
                  initial_heat_temperature,
+                 initial_room_temperature,
                  kalman: KalmanFilter4P,
                  self_adaptation_manager: SelfAdaptationManager,
                  supervisor_sm: SupervisorSM,
@@ -30,7 +31,8 @@ class SelfAdaptationScenario(Model):
                                                             G_box,
                                                             C_heater,
                                                             G_heater, initial_box_temperature,
-                                                            initial_heat_temperature)
+                                                            initial_heat_temperature,
+                                                            initial_room_temperature)
 
         self.kalman = kalman
         self.self_adaptation_manager = SelfAdaptationModel(self_adaptation_manager)

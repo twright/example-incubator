@@ -24,42 +24,50 @@ class SelfAdaptationTests(CLIModeTest):
         config = load_config("startup.conf")
 
         n_samples_period = config["physical_twin"]["controller_open_loop"]["n_samples_period"]
-        n_samples_heating = config["physical_twin"]["controller_open_loop"]["n_samples_heating"]
+        n_samples_heating = 5
         C_air = config["digital_twin"]["models"]["plant"]["param4"]["C_air"]
         G_box = config["digital_twin"]["models"]["plant"]["param4"]["G_box"]
+        G_box_kf = G_box
         C_heater = config["digital_twin"]["models"]["plant"]["param4"]["C_heater"]
         G_heater = config["digital_twin"]["models"]["plant"]["param4"]["G_heater"]
-        initial_box_temperature = config["digital_twin"]["models"]["plant"]["param4"]["initial_box_temperature"]
-        initial_heat_temperature = config["digital_twin"]["models"]["plant"]["param4"]["initial_heat_temperature"]
-        std_dev = 1.4
+        initial_box_temperature = 41
+        initial_heat_temperature = 47
+        initial_room_temperature = 21
+        std_dev = 0.001
         step_size = 3.0
-        anomaly_threshold = 1.0
+        anomaly_threshold = 2.0
         # Time spent before declaring that there is an self_adaptation_manager, after the first time the self_adaptation_manager occurred.
         ensure_anomaly_timer = 1
         # Time spent, after the self_adaptation_manager was declared as detected, just so enough data about the system is gathered.
         # The data used for recalibration will be in interval [time_first_occurrence, time_data_gathered]
-        gather_data_timer = 6
+        gather_data_timer = 10
         conv_xatol = 0.1
         conv_fatol = 0.1
         max_iterations = 200
-        desired_temperature = 38
+        desired_temperature = 41
         max_t_heater = 60
         restrict_T_heater = True
-        trigger_optimization_threshold = 10.0
-        wait_til_supervising_timer = 50 # N steps supervisor should wait before kicking in.
+        trigger_optimization_threshold = 1000.0
+        wait_til_supervising_timer = 1000  # N steps supervisor should wait before kicking in.
+        optimize_controller = False
 
         tf = 6000 if self.ide_mode() else 3000
 
-        kalman = KalmanFilter4P(std_dev, step_size,
-                                C_air, G_box, C_heater, G_heater,
-                                initial_box_temperature, initial_heat_temperature, initial_box_temperature)
+        kalman = KalmanFilter4P(step_size, std_dev,
+                                C_air, G_box_kf, C_heater, G_heater,
+                                initial_room_temperature, initial_heat_temperature, initial_box_temperature)
 
         database = MockDatabase(step_size)
         plant_simulator = PlantSimulator4Params()
         calibrator = Calibrator(database, plant_simulator, conv_xatol, conv_fatol, max_iterations)
         pt_simulator = SystemModel4ParametersOpenLoopSimulator()
         ctrl = MockController()
-        ctrl_optimizer = ControllerOptimizer(database, pt_simulator, ctrl, conv_xatol, conv_fatol, max_iterations, restrict_T_heater, desired_temperature, max_t_heater)
+
+        if optimize_controller:
+            ctrl_optimizer = ControllerOptimizer(database, pt_simulator, ctrl, conv_xatol, conv_fatol, max_iterations, restrict_T_heater, desired_temperature, max_t_heater)
+        else:
+            ctrl_optimizer = NoOPControllerOptimizer()
+
         anomaly_detector = SelfAdaptationManager(anomaly_threshold, ensure_anomaly_timer, gather_data_timer, calibrator, kalman, ctrl_optimizer)
         supervisor = SupervisorSM(ctrl_optimizer, desired_temperature, max_t_heater, trigger_optimization_threshold, wait_til_supervising_timer)
 
@@ -67,6 +75,7 @@ class SelfAdaptationTests(CLIModeTest):
                                    C_air, G_box, C_heater, G_heater,
                                    initial_box_temperature,
                                    initial_heat_temperature,
+                                   initial_room_temperature,
                                    kalman, anomaly_detector, supervisor,
                                    std_dev)
 
@@ -85,10 +94,11 @@ class SelfAdaptationTests(CLIModeTest):
 
         ModelSolver().simulate(m, 0.0, tf, 3.0)
 
-        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, sharex='all')
+        fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1, sharex='all')
 
         ax1.plot(m.signals['time'], m.physical_twin.plant.signals['T'], label=f"- T")
         ax1.plot(m.signals['time'], m.kalman.signals['out_T'], linestyle="dashed", label=f"~ T")
+        ax1.plot(m.signals['time'], m.kalman.signals['out_T_prior'], linestyle="dashed", label=f"~ T_prior")
 
         for (times, trajectory) in database.plant_calibration_trajectory_history:
             ax1.plot(times, trajectory[0, :], label=f"cal T", linestyle='dotted')
@@ -118,6 +128,11 @@ class SelfAdaptationTests(CLIModeTest):
                     label=f"Error")
         ax4.legend()
 
+        ax5.plot(m.signals['time'], m.kalman.signals['out_P_00'], linestyle="dashed", label=f"P_00")
+        ax5.plot(m.signals['time'], m.kalman.signals['out_P_11'], linestyle="dashed", label=f"P_11")
+
+        ax5.legend()
+
         if self.ide_mode():
             print("Parameters:")
             print("C_air: ", database.C_air)
@@ -125,6 +140,11 @@ class SelfAdaptationTests(CLIModeTest):
             print("C_heater: ", database.C_heater)
             print("G_heater: ", database.G_heater)
             plt.show()
+
+
+class NoOPControllerOptimizer:
+    def optimize_controller(self):
+        pass
 
 
 class MockController(IParametricController):

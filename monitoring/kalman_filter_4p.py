@@ -121,6 +121,9 @@ class KalmanFilter4P(Model, IUpdateableKalmanFilter):
 
         self.out_T = self.var(lambda: self.cached_T)
         self.out_T_heater = self.var(lambda: self.cached_T_heater)
+        self.out_P_00 = self.var(lambda: self.filter.P[0, 0])
+        self.out_P_11 = self.var(lambda: self.filter.P[1, 1])
+        self.out_T_prior = self.var(lambda: self.filter.x_prior[1, 0])
 
         # Store these values so they can be used to reinitialize the kalman filter.
         self.step_size = step_size

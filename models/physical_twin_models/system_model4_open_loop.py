@@ -38,11 +38,13 @@ class SystemModel4ParametersOpenLoop(Model):
                  C_heater,
                  G_heater,
                  initial_box_temperature=35,
-                 initial_heat_temperature=35):
+                 initial_heat_temperature=35,
+                 initial_room_temperature=21):
         super().__init__()
 
         self.ctrl = ControllerOpenLoop(n_samples_period, n_samples_heating)
-        self.plant = FourParameterIncubatorPlant(initial_box_temperature=initial_box_temperature,
+        self.plant = FourParameterIncubatorPlant(initial_room_temperature=initial_room_temperature,
+                                                 initial_box_temperature=initial_box_temperature,
                                                  initial_heat_temperature=initial_heat_temperature,
                                                  C_air=C_air,
                                                  G_box=G_box,

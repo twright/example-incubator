@@ -22,10 +22,10 @@ class TestKalmanFilter(CLIModeTest):
         # Load the data
         time_unit = 'ns'
         data, _ = load_data("./datasets/lid_opening_experiment_jan_2021/lid_opening_experiment_jan_2021.csv",
-                                     desired_timeframe=(- math.inf, math.inf),
-                                     time_unit=time_unit,
-                                     normalize_time=False,
-                                     convert_to_seconds=True)
+                            desired_timeframe=(- math.inf, math.inf),
+                            time_unit=time_unit,
+                            normalize_time=False,
+                            convert_to_seconds=True)
         events = pandas.read_csv(resource_file_path("./datasets/lid_opening_experiment_jan_2021/events.csv"))
         events["timestamp_ns"] = pandas.to_datetime(events["time"], unit=time_unit)
 
@@ -43,14 +43,16 @@ class TestKalmanFilter(CLIModeTest):
         G_box_num = params[1]
         C_heater_num = params[2]
         G_heater_num = params[3]
+        initial_room_temperature = 21.0
 
         f = KalmanFilter4P(data_sample_size, std_dev,
                            C_air=C_air_num,
                            G_box=G_box_num,
                            C_heater=C_heater_num,
                            G_heater=G_heater_num,
-                           initial_room_temperature=25.0,
-                           initial_box_temperature=25.0)
+                           initial_room_temperature=initial_room_temperature,
+                           initial_box_temperature=41.0,
+                           initial_heat_temperature=47.0)
 
         kalman_prediction = []
         for i in range(len(measurements_heater)):
