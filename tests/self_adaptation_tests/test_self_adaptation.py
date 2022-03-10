@@ -47,6 +47,7 @@ class SelfAdaptationTests(CLIModeTest):
         restrict_T_heater = True
         trigger_optimization_threshold = 10.0
         wait_til_supervising_timer = 50 # N steps supervisor should wait before kicking in.
+
         tf = 6000 if self.ide_mode() else 3000
 
         kalman = KalmanFilter4P(std_dev, step_size,
