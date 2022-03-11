@@ -67,11 +67,6 @@ class ControllerPhysicalOpenLoop:
                                 on_message_callback=self.control_loop_callback)
 
     def ctrl_step(self):
-        if self.box_air_temperature >= 58:
-            self._l.error("Temperature exceeds 58, Cleaning up.")
-            self.cleanup()
-            sys.exit(0)
-
         self.state_machine.step()
         self.heater_ctrl = self.state_machine.cached_heater_on
 

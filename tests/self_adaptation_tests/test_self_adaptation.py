@@ -41,6 +41,7 @@ class SelfAdaptationTests(CLIModeTest):
         # Time spent, after the self_adaptation_manager was declared as detected, just so enough data about the system is gathered.
         # The data used for recalibration will be in interval [time_first_occurrence, time_data_gathered]
         gather_data_timer = 10
+        cool_down_timer = 5
         conv_xatol = 0.1
         conv_fatol = 0.1
         max_iterations = 200
@@ -68,7 +69,8 @@ class SelfAdaptationTests(CLIModeTest):
         else:
             ctrl_optimizer = NoOPControllerOptimizer()
 
-        anomaly_detector = SelfAdaptationManager(anomaly_threshold, ensure_anomaly_timer, gather_data_timer, calibrator, kalman, ctrl_optimizer)
+        anomaly_detector = SelfAdaptationManager(anomaly_threshold, ensure_anomaly_timer, gather_data_timer, cool_down_timer,
+                                                 calibrator, kalman, ctrl_optimizer)
         supervisor = SupervisorSM(ctrl_optimizer, desired_temperature, max_t_heater, trigger_optimization_threshold, wait_til_supervising_timer)
 
         m = SelfAdaptationScenario(n_samples_period, n_samples_heating,
@@ -94,11 +96,11 @@ class SelfAdaptationTests(CLIModeTest):
 
         ModelSolver().simulate(m, 0.0, tf, 3.0)
 
-        fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1, sharex='all')
+        fig, (ax1, ax2, ax3, ax4, ax5, ax6) = plt.subplots(6, 1, sharex='all')
 
         ax1.plot(m.signals['time'], m.physical_twin.plant.signals['T'], label=f"- T")
         ax1.plot(m.signals['time'], m.kalman.signals['out_T'], linestyle="dashed", label=f"~ T")
-        ax1.plot(m.signals['time'], m.kalman.signals['out_T_prior'], linestyle="dashed", label=f"~ T_prior")
+        # ax1.plot(m.signals['time'], m.kalman.signals['out_T_prior'], linestyle="dashed", label=f"~ T_prior")
 
         for (times, trajectory) in database.plant_calibration_trajectory_history:
             ax1.plot(times, trajectory[0, :], label=f"cal T", linestyle='dotted')
@@ -128,10 +130,15 @@ class SelfAdaptationTests(CLIModeTest):
                     label=f"Error")
         ax4.legend()
 
-        ax5.plot(m.signals['time'], m.kalman.signals['out_P_00'], linestyle="dashed", label=f"P_00")
-        ax5.plot(m.signals['time'], m.kalman.signals['out_P_11'], linestyle="dashed", label=f"P_11")
+        ax5.plot(m.signals['time'], m.kalman.signals['out_P_00'], label=f"P_00")
+        ax5.plot(m.signals['time'], m.kalman.signals['out_P_11'], label=f"P_11")
 
         ax5.legend()
+
+        ax6.plot(m.signals['time'], m.kalman.signals['C_air'], label=f"C_air")
+        ax6.plot(m.signals['time'], m.kalman.signals['G_box'], label=f"G_box")
+
+        ax6.legend()
 
         if self.ide_mode():
             print("Parameters:")

@@ -7,7 +7,7 @@ from interfaces.updateable_kalman_filter import IUpdateableKalmanFilter
 
 
 class SelfAdaptationManager:
-    def __init__(self, anomaly_threshold, ensure_anomaly_timer, gather_data_timer,
+    def __init__(self, anomaly_threshold, ensure_anomaly_timer, gather_data_timer, cool_down_timer,
                  calibrator: Calibrator,
                  kalman_filter: IUpdateableKalmanFilter,
                  controller_optimizer: ControllerOptimizer):
@@ -17,6 +17,7 @@ class SelfAdaptationManager:
         self.current_state = "Listening"
         self.anomaly_threshold = anomaly_threshold
         self.gather_data_timer = gather_data_timer
+        self.cool_down_timer = cool_down_timer
         self.ensure_anomaly_timer = ensure_anomaly_timer
         self.temperature_residual_abs = 0.0
         self.anomaly_detected = False
@@ -79,7 +80,6 @@ class SelfAdaptationManager:
             if self.next_action_timer == 0:
                 self.current_state = "Calibrating"
                 self.next_action_timer = -1
-                return
             return
         if self.current_state == "Calibrating":
             assert self.time_anomaly_start >= 0.0
@@ -88,8 +88,20 @@ class SelfAdaptationManager:
             if success:
                 self.kalman_filter.update_parameters(C_air, G_box, C_heater, G_heater)
                 self.controller_optimizer.optimize_controller()
+
+                self.current_state = "CoolingDown"
+                self.next_action_timer = self.cool_down_timer
+                self.anomaly_detected = False
+            return
+        if self.current_state == "CoolingDown":
+            assert not self.anomaly_detected
+            assert self.next_action_timer >= 0
+            if self.next_action_timer > 0:
+                self.next_action_timer -= 1
+            if self.next_action_timer == 0:
                 self.reset()
             return
+
 
 
 class SelfAdaptationModel(Model):

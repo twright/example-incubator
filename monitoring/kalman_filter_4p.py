@@ -92,8 +92,9 @@ def construct_filter(step_size, std_dev,
     f.F = dt_system.A
     f.B = dt_system.B
     f.H = dt_system.C
-    f.P = np.array([[1., 0.],
-                    [0., 1.]])
+    # TODO: Externalize this config: these have been configured based on empirical tests.
+    f.P = np.array([[0.0002, 0.],
+                    [0., 0.0002]])
     f.R = np.array([[std_dev]])
     f.Q = Q_discrete_white_noise(dim=2, dt=step_size, var=std_dev ** 2)
 
@@ -129,6 +130,16 @@ class KalmanFilter4P(Model, IUpdateableKalmanFilter):
         self.step_size = step_size
         self.std_dev = std_dev
 
+        # Store these parameters so they can be turned into signals and plotted
+        self.cached_C_air = C_air
+        self.cached_G_box = G_box
+        self.cached_C_heater = C_heater
+        self.cached_G_heater = G_heater
+        self.C_air = self.var(lambda: self.cached_C_air)
+        self.G_box = self.var(lambda: self.cached_G_box)
+        self.C_heater = self.var(lambda: self.cached_C_heater)
+        self.G_heater = self.var(lambda: self.cached_G_heater)
+
         self.save()
 
     def kalman_step(self, in_heater, in_room_T, in_T):
@@ -148,7 +159,14 @@ class KalmanFilter4P(Model, IUpdateableKalmanFilter):
     def update_parameters(self, C_air, G_box, C_heater, G_heater):
         # Reset output of the KF to the measurement
         self.cached_T = self.in_T()
+
         # Reconstruct filter
         self.filter = construct_filter(self.step_size, self.std_dev,
                                        C_air, G_box, C_heater, G_heater,
                                        self.cached_T_heater, self.cached_T)
+
+        # Update parameters, so they can be plotted
+        self.cached_C_air = C_air
+        self.cached_G_box = G_box
+        self.cached_C_heater = C_heater
+        self.cached_G_heater = G_heater
