@@ -5,8 +5,11 @@ from interfaces.parametric_controller import IParametricController
 from interfaces.database import IDatabase
 from models.physical_twin_models.system_model4_open_loop import SystemModel4ParametersOpenLoopSimulator
 
+class IControllerOptimizer:
+    def optimize_controller(self):
+        raise NotImplementedError("For subclasses")
 
-class ControllerOptimizer:
+class ControllerOptimizer(IControllerOptimizer):
 
     def __init__(self, database: IDatabase,
                  pt_simulator: SystemModel4ParametersOpenLoopSimulator,
@@ -91,3 +94,8 @@ class ControllerOptimizer:
                                                       model.plant.signals['T'],
                                                       model.plant.signals['T_heater'],
                                                       model.ctrl.signals['heater_on'])
+
+
+class NoOPControllerOptimizer(IControllerOptimizer):
+    def optimize_controller(self):
+        pass

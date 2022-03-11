@@ -2,7 +2,7 @@ import numpy as np
 from oomodelling import Model
 
 from calibration.calibrator import Calibrator
-from self_adaptation.controller_optimizer import ControllerOptimizer
+from self_adaptation.controller_optimizer import IControllerOptimizer
 from interfaces.updateable_kalman_filter import IUpdateableKalmanFilter
 
 
@@ -10,7 +10,7 @@ class SelfAdaptationManager:
     def __init__(self, anomaly_threshold, ensure_anomaly_timer, gather_data_timer, cool_down_timer,
                  calibrator: Calibrator,
                  kalman_filter: IUpdateableKalmanFilter,
-                 controller_optimizer: ControllerOptimizer):
+                 controller_optimizer: IControllerOptimizer):
         assert 0 < ensure_anomaly_timer
         assert 0 < gather_data_timer
         assert 0 < anomaly_threshold

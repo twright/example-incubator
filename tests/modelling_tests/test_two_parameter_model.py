@@ -74,7 +74,7 @@ class TestsModelling(CLIModeTest):
         params = two_param_model_params
         # CWD: Example_Digital-Twin_Incubator\software\
         data, _ = load_data("./datasets/calibration_fan_12v/random_on_off_sequences.csv")
-        results, sol = run_experiment_two_parameter_model(data, params, h=3.0)
+        results, sol = run_experiment_two_parameter_model(data, params, h=CTRL_EXEC_INTERVAL)
 
         fig, (ax1, ax2, ax4) = plt.subplots(3, 1)
 

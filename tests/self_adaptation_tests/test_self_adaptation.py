@@ -13,7 +13,7 @@ from models.plant_models.four_parameters_model.four_parameter_model import FourP
 from models.self_adaptation.self_adaptation_scenario import SelfAdaptationScenario
 from self_adaptation.self_adaptation_manager import SelfAdaptationManager
 from monitoring.kalman_filter_4p import KalmanFilter4P
-from self_adaptation.controller_optimizer import ControllerOptimizer
+from self_adaptation.controller_optimizer import ControllerOptimizer, NoOPControllerOptimizer
 from self_adaptation.supervisor import SupervisorThresholdSM, SupervisorPeriodicSM
 from tests.cli_mode_test import CLIModeTest
 
@@ -32,7 +32,7 @@ class SelfAdaptationTests(CLIModeTest):
         G_heater = config["digital_twin"]["models"]["plant"]["param4"]["G_heater"]
         initial_box_temperature = 41
         initial_heat_temperature = 47
-        initial_room_temperature = 21
+        initial_room_temperature = 21  # TODO: Add this parameter to config file.
         std_dev = 0.001
         step_size = 3.0
         anomaly_threshold = 2.0
@@ -42,16 +42,20 @@ class SelfAdaptationTests(CLIModeTest):
         # The data used for recalibration will be in interval [time_first_occurrence, time_data_gathered]
         gather_data_timer = 10
         cool_down_timer = 5
+        optimize_controller = True
+
         conv_xatol = 0.1
         conv_fatol = 0.1
         max_iterations = 200
         desired_temperature = 41
         max_t_heater = 60
         restrict_T_heater = True
+
+
+        # Supervisor parameters
         trigger_optimization_threshold = 10.0
         heater_underused_threshold = 10.0
         wait_til_supervising_timer = 500  # N steps supervisor should wait before kicking in.
-        optimize_controller = True
 
         tf = 6000 if self.ide_mode() else 3000
 
@@ -151,11 +155,6 @@ class SelfAdaptationTests(CLIModeTest):
             print("C_heater: ", database.C_heater)
             print("G_heater: ", database.G_heater)
             plt.show()
-
-
-class NoOPControllerOptimizer:
-    def optimize_controller(self):
-        pass
 
 
 class MockController(IParametricController):
