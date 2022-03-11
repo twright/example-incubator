@@ -3,6 +3,7 @@ version: '3.0'
 services:
   rabbitmq:
     container_name: rabbitmq-server
+    image: rabbitmq
     build : ./
     restart: always
     ports:
