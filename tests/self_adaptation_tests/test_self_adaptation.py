@@ -51,11 +51,10 @@ class SelfAdaptationTests(CLIModeTest):
         max_t_heater = 60
         restrict_T_heater = True
 
-
         # Supervisor parameters
         trigger_optimization_threshold = 10.0
         heater_underused_threshold = 10.0
-        wait_til_supervising_timer = 500  # N steps supervisor should wait before kicking in.
+        wait_til_supervising_timer = 100  # N steps supervisor should wait before kicking in.
 
         tf = 6000 if self.ide_mode() else 3000
 
