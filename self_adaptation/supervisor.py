@@ -11,12 +11,15 @@ class ISupervisorSM:
 
 class SupervisorThresholdSM(ISupervisorSM):
     def __init__(self, controller_optimizer: ControllerOptimizer,
-                 desired_temperature, max_t_heater, trigger_optimization_threshold, wait_til_supervising_timer):
+                 desired_temperature, max_t_heater,
+                 trigger_optimization_threshold, heater_underused_threshold,
+                 wait_til_supervising_timer):
         # Constants
         self.controller_optimizer = controller_optimizer
         self.desired_temperature = desired_temperature
         self.max_t_heater = max_t_heater
         self.trigger_optimization_threshold = trigger_optimization_threshold
+        self.heater_underused_threshold = heater_underused_threshold
         self.wait_til_supervising_timer = wait_til_supervising_timer
 
         # Holds the next sample for which an action has to be taken.
@@ -41,8 +44,9 @@ class SupervisorThresholdSM(ISupervisorSM):
         if self.current_state == "Listening":
             assert self.next_action_timer < 0
             heater_safe = T_heater < self.max_t_heater
-            temperature_residual = np.absolute(T - self.desired_temperature)
-            if heater_safe and (temperature_residual > self.trigger_optimization_threshold):
+            heater_underused = (self.max_t_heater - T_heater) > self.heater_underused_threshold
+            temperature_residual_above_threshold = np.absolute(T - self.desired_temperature) > self.trigger_optimization_threshold
+            if heater_safe and heater_underused and temperature_residual_above_threshold:
                 # Reoptimize controller and then go into waiting
                 self.controller_optimizer.optimize_controller()
                 self.reset()

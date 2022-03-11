@@ -48,7 +48,8 @@ class SelfAdaptationTests(CLIModeTest):
         desired_temperature = 41
         max_t_heater = 60
         restrict_T_heater = True
-        trigger_optimization_threshold = 1000.0
+        trigger_optimization_threshold = 10.0
+        heater_underused_threshold = 10.0
         wait_til_supervising_timer = 500  # N steps supervisor should wait before kicking in.
         optimize_controller = True
 
@@ -71,7 +72,10 @@ class SelfAdaptationTests(CLIModeTest):
 
         anomaly_detector = SelfAdaptationManager(anomaly_threshold, ensure_anomaly_timer, gather_data_timer, cool_down_timer,
                                                  calibrator, kalman, ctrl_optimizer)
-        supervisor = SupervisorPeriodicSM(ctrl_optimizer, wait_til_supervising_timer)
+        # supervisor = SupervisorPeriodicSM(ctrl_optimizer, wait_til_supervising_timer)
+        supervisor = SupervisorThresholdSM(ctrl_optimizer, desired_temperature, max_t_heater,
+                                           trigger_optimization_threshold, heater_underused_threshold,
+                                           wait_til_supervising_timer)
 
         m = SelfAdaptationScenario(n_samples_period, n_samples_heating,
                                    C_air, G_box, C_heater, G_heater,
