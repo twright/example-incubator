@@ -14,7 +14,7 @@ from models.self_adaptation.self_adaptation_scenario import SelfAdaptationScenar
 from self_adaptation.self_adaptation_manager import SelfAdaptationManager
 from monitoring.kalman_filter_4p import KalmanFilter4P
 from self_adaptation.controller_optimizer import ControllerOptimizer
-from self_adaptation.supervisor import SupervisorSM
+from self_adaptation.supervisor import SupervisorThresholdSM, SupervisorPeriodicSM
 from tests.cli_mode_test import CLIModeTest
 
 
@@ -49,8 +49,8 @@ class SelfAdaptationTests(CLIModeTest):
         max_t_heater = 60
         restrict_T_heater = True
         trigger_optimization_threshold = 1000.0
-        wait_til_supervising_timer = 1000  # N steps supervisor should wait before kicking in.
-        optimize_controller = False
+        wait_til_supervising_timer = 500  # N steps supervisor should wait before kicking in.
+        optimize_controller = True
 
         tf = 6000 if self.ide_mode() else 3000
 
@@ -71,7 +71,7 @@ class SelfAdaptationTests(CLIModeTest):
 
         anomaly_detector = SelfAdaptationManager(anomaly_threshold, ensure_anomaly_timer, gather_data_timer, cool_down_timer,
                                                  calibrator, kalman, ctrl_optimizer)
-        supervisor = SupervisorSM(ctrl_optimizer, desired_temperature, max_t_heater, trigger_optimization_threshold, wait_til_supervising_timer)
+        supervisor = SupervisorPeriodicSM(ctrl_optimizer, wait_til_supervising_timer)
 
         m = SelfAdaptationScenario(n_samples_period, n_samples_heating,
                                    C_air, G_box, C_heater, G_heater,

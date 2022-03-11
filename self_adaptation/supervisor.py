@@ -4,7 +4,12 @@ from oomodelling import Model
 from self_adaptation.controller_optimizer import ControllerOptimizer
 
 
-class SupervisorSM:
+class ISupervisorSM:
+    def step(self, T, T_heater, time):
+        raise NotImplementedError("For subclasses")
+
+
+class SupervisorThresholdSM(ISupervisorSM):
     def __init__(self, controller_optimizer: ControllerOptimizer,
                  desired_temperature, max_t_heater, trigger_optimization_threshold, wait_til_supervising_timer):
         # Constants
@@ -47,8 +52,36 @@ class SupervisorSM:
             return
 
 
+class SupervisorPeriodicSM(ISupervisorSM):
+    def __init__(self, controller_optimizer: ControllerOptimizer, wait_til_supervising_timer):
+        # Constants
+        self.controller_optimizer = controller_optimizer
+        self.wait_til_supervising_timer = wait_til_supervising_timer
+
+        # Holds the next sample for which an action has to be taken.
+        self.next_action_timer = -1
+        self.current_state = None
+        self.reset()
+
+    def reset(self):
+        self.next_action_timer = self.wait_til_supervising_timer
+        self.current_state = "Waiting"
+
+    def step(self, T, T_heater, time):
+        if self.current_state == "Waiting":
+            assert self.next_action_timer >= 0
+            if self.next_action_timer > 0:
+                self.next_action_timer -= 1
+
+            if self.next_action_timer == 0:
+                # Reoptimize controller and then go into waiting again
+                self.controller_optimizer.optimize_controller()
+                self.reset()
+            return
+
+
 class SupervisorModel(Model):
-    def __init__(self, sm: SupervisorSM):
+    def __init__(self, sm: ISupervisorSM):
         super().__init__()
 
         self.state_machine = sm

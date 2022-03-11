@@ -3,7 +3,7 @@ from oomodelling import Model
 from models.physical_twin_models.system_model4_open_loop import SystemModel4ParametersOpenLoop
 from self_adaptation.self_adaptation_manager import SelfAdaptationModel, SelfAdaptationManager
 from monitoring.kalman_filter_4p import KalmanFilter4P
-from self_adaptation.supervisor import SupervisorSM, SupervisorModel
+from self_adaptation.supervisor import SupervisorModel, ISupervisorSM
 
 
 class SelfAdaptationScenario(Model):
@@ -20,7 +20,7 @@ class SelfAdaptationScenario(Model):
                  initial_room_temperature,
                  kalman: KalmanFilter4P,
                  self_adaptation_manager: SelfAdaptationManager,
-                 supervisor_sm: SupervisorSM,
+                 supervisor_sm: ISupervisorSM,
                  std_dev
                  ):
         super().__init__()
