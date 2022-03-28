@@ -4,7 +4,6 @@ import numpy as np
 from scipy.optimize import minimize
 
 from interfaces.database import IDatabase
-from digital_twin.simulator.plant_simulator import PlantSimulator4Params
 
 
 def compute_error(tracked_solutions, new_state_trajectories):
@@ -13,7 +12,7 @@ def compute_error(tracked_solutions, new_state_trajectories):
 
 
 class Calibrator:
-    def __init__(self, database: IDatabase, plant_simulator: PlantSimulator4Params, conv_xatol, conv_fatol, max_iterations):
+    def __init__(self, database: IDatabase, plant_simulator, conv_xatol, conv_fatol, max_iterations):
         self._l = logging.getLogger("Calibrator")
         self.database = database
         self.plant_simulator = plant_simulator
