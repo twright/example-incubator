@@ -3,3 +3,6 @@
 /.idea
 /docs/_build
 .vscode
+**/.ipynb_checkpoints/*
+**/output/*
+startup.conf
