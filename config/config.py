@@ -22,7 +22,7 @@ def resource_file_path(filename):
     print(f"File not found: {filename}")
     print(f"Tried the following directories:")
     print(directories)
-    raise ValueError("File not found: {filename}")
+    raise ValueError(f"File not found: {filename}")
 
 
 def load_config(config_file_name) -> dict:
