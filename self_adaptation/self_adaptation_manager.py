@@ -4,6 +4,7 @@ from oomodelling import Model
 from calibration.calibrator import Calibrator
 from self_adaptation.controller_optimizer import IControllerOptimizer
 from interfaces.updateable_kalman_filter import IUpdateableKalmanFilter
+from digital_twin.simulator.verified_plant_simulator import VerifiedPlantSimulator4Params
 
 
 class SelfAdaptationManager:
@@ -23,6 +24,12 @@ class SelfAdaptationManager:
         self.anomaly_detected = False
         self.kalman_filter = kalman_filter
         self.controller_optimizer = controller_optimizer
+
+        # Collect together verified traces and models
+        self.anomaly_durations = []
+        self.anomaly_parameters = []
+        self.verified_traces = []
+        self.verified_models = []
 
         # Holds the next sample for which an action has to be taken.
         self.next_action_timer = -1
@@ -87,6 +94,29 @@ class SelfAdaptationManager:
             if success:
                 self.kalman_filter.update_parameters(C_air, G_box, C_heater, G_heater)
                 self.controller_optimizer.optimize_controller()
+
+                # Can we insert the verified model here?
+                # Retrieving the parameters for the verified twin from the database
+                vsignals, t_start_idx, t_end_idx = self.calibrator.database.get_plant_signals_between(self.time_anomaly_start, time_s)
+                times = vsignals["time"][t_start_idx:t_end_idx]
+                print(f"running verified monitoring for anomaly between times {times[0]} and {times[-1]}")
+                reference_T = vsignals["T"][t_start_idx:t_end_idx]
+                ctrl_signal = vsignals["in_heater_on"][t_start_idx:t_end_idx]
+                reference_T_heater = vsignals["T_heater"][t_start_idx:t_end_idx]
+                room_T = vsignals["in_room_temperature"][t_start_idx:t_end_idx]
+                assert len(reference_T) == len(times) == len(ctrl_signal) == len(reference_T_heater)
+
+                # # Run the verified twin simulation
+                # verified_trace, verified_model = VerifiedPlantSimulator4Params().run_simulation(times,
+                    #  reference_T[0], reference_T_heater[0], room_T, ctrl_signal,
+                    #  C_air, G_box, C_heater, G_heater)
+                
+                # # Store all of the verified models and traces in a list
+                self.anomaly_durations.append((times[0], times[-1]))
+                self.anomaly_parameters.append((times, reference_T[0], reference_T_heater[0], room_T, ctrl_signal,
+                     C_air, G_box, C_heater, G_heater))
+                # self.verified_traces.append(verified_trace)
+                # self.verified_models.append(verified_model)
 
                 self.current_state = "CoolingDown"
                 self.next_action_timer = self.cool_down_timer
