@@ -1,17 +1,19 @@
 import numpy as np
 from oomodelling import Model
+from sage.all import RIF
 
 from calibration.calibrator import Calibrator
 from self_adaptation.controller_optimizer import IControllerOptimizer
 from interfaces.updateable_kalman_filter import IUpdateableKalmanFilter
-from digital_twin.simulator.verified_plant_simulator import VerifiedPlantSimulator4Params
+#from digital_twin.simulator.verified_plant_simulator import VerifiedPlantSimulator4Params
 
 
 class SelfAdaptationManager:
     def __init__(self, anomaly_threshold, ensure_anomaly_timer, gather_data_timer, cool_down_timer,
                  calibrator: Calibrator,
                  kalman_filter: IUpdateableKalmanFilter,
-                 controller_optimizer: IControllerOptimizer):
+                 controller_optimizer: IControllerOptimizer,
+                 verified_monitor):
         assert 0 < ensure_anomaly_timer
         assert 0 < gather_data_timer
         assert 0 < anomaly_threshold
@@ -28,13 +30,13 @@ class SelfAdaptationManager:
         # Collect together verified traces and models
         self.anomaly_durations = []
         self.anomaly_parameters = []
-        self.verified_traces = []
-        self.verified_models = []
+        self.verified_monitoring_results = []
 
         # Holds the next sample for which an action has to be taken.
         self.next_action_timer = -1
         self.calibrator = calibrator
         self.time_anomaly_start = -1.0
+        self.verified_monitor = verified_monitor
 
     def reset(self):
         self.current_state = "Listening"
@@ -107,16 +109,20 @@ class SelfAdaptationManager:
                 assert len(reference_T) == len(times) == len(ctrl_signal) == len(reference_T_heater)
 
                 # # Run the verified twin simulation
-                # verified_trace, verified_model = VerifiedPlantSimulator4Params().run_simulation(times,
-                    #  reference_T[0], reference_T_heater[0], room_T, ctrl_signal,
-                    #  C_air, G_box, C_heater, G_heater)
+                monitoring_results = self.verified_monitor.verified_monitoring_results(
+                    times,
+                    reference_T[0],
+                    reference_T_heater[0],
+                    room_T,
+                    ctrl_signal,
+                    C_air, G_box, C_heater, G_heater,
+                )
                 
                 # # Store all of the verified models and traces in a list
                 self.anomaly_durations.append((times[0], times[-1]))
                 self.anomaly_parameters.append((times, reference_T[0], reference_T_heater[0], room_T, ctrl_signal,
                      C_air, G_box, C_heater, G_heater))
-                # self.verified_traces.append(verified_trace)
-                # self.verified_models.append(verified_model)
+                self.verified_monitoring_results.append(monitoring_results)
 
                 self.current_state = "CoolingDown"
                 self.next_action_timer = self.cool_down_timer
