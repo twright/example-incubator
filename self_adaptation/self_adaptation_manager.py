@@ -13,7 +13,8 @@ class SelfAdaptationManager:
                  calibrator: Calibrator,
                  kalman_filter: IUpdateableKalmanFilter,
                  controller_optimizer: IControllerOptimizer,
-                 verified_monitor):
+                 verified_monitor,
+                 lookahead_time=0):
         assert 0 < ensure_anomaly_timer
         assert 0 < gather_data_timer
         assert 0 < anomaly_threshold
@@ -27,6 +28,11 @@ class SelfAdaptationManager:
         self.kalman_filter = kalman_filter
         self.controller_optimizer = controller_optimizer
 
+        # Verified monitor to detect future problems after optimizing
+        # controller in response to anomolies
+        self.verified_monitor = verified_monitor
+        self.lookahead_time = lookahead_time
+
         # Collect together verified traces and models
         self.anomaly_durations = []
         self.anomaly_parameters = []
@@ -36,7 +42,6 @@ class SelfAdaptationManager:
         self.next_action_timer = -1
         self.calibrator = calibrator
         self.time_anomaly_start = -1.0
-        self.verified_monitor = verified_monitor
 
     def reset(self):
         self.current_state = "Listening"
@@ -99,29 +104,45 @@ class SelfAdaptationManager:
 
                 # Can we insert the verified model here?
                 # Retrieving the parameters for the verified twin from the database
-                vsignals, t_start_idx, t_end_idx = self.calibrator.database.get_plant_signals_between(self.time_anomaly_start, time_s)
+                n_samples_heating, n_samples_period, heater_ctrl_step = self.calibrator.database.get_ctrl_parameters()
+                vsignals, t_start_idx, t_end_idx = self.calibrator.database.get_plant_signals_between(
+                    self.time_anomaly_start,
+                    time_s,
+                )
                 times = vsignals["time"][t_start_idx:t_end_idx]
                 print(f"running verified monitoring for anomaly between times {times[0]} and {times[-1]}")
                 reference_T = vsignals["T"][t_start_idx:t_end_idx]
                 ctrl_signal = vsignals["in_heater_on"][t_start_idx:t_end_idx]
                 reference_T_heater = vsignals["T_heater"][t_start_idx:t_end_idx]
-                room_T = vsignals["in_room_temperature"][t_start_idx:t_end_idx]
-                assert len(reference_T) == len(times) == len(ctrl_signal) == len(reference_T_heater)
+                room_T_range = vsignals["in_room_temperature"][t_start_idx:t_end_idx]
+                room_T = RIF(min(*room_T_range), max(*room_T_range))
 
-                # # Run the verified twin simulation
+                # Run the verified twin simulation
                 monitoring_results = self.verified_monitor.verified_monitoring_results(
-                    times,
+                    self.time_anomaly_start,
+                    self.time_anomaly_start + self.lookahead_time,
                     reference_T[0],
                     reference_T_heater[0],
                     room_T,
-                    ctrl_signal,
+                    heater_ctrl_step,
+                    n_samples_period,
+                    n_samples_heating,
                     C_air, G_box, C_heater, G_heater,
                 )
                 
-                # # Store all of the verified models and traces in a list
+                # Store all of the verified models and traces in a list
                 self.anomaly_durations.append((times[0], times[-1]))
-                self.anomaly_parameters.append((times, reference_T[0], reference_T_heater[0], room_T, ctrl_signal,
-                     C_air, G_box, C_heater, G_heater))
+                self.anomaly_parameters.append((
+                    self.time_anomaly_start,
+                    self.time_anomaly_start + self.lookahead_time,
+                    reference_T[0],
+                    reference_T_heater[0],
+                    room_T,
+                    heater_ctrl_step,
+                    n_samples_period,
+                    n_samples_heating,
+                    C_air, G_box, C_heater, G_heater,
+                ))
                 self.verified_monitoring_results.append(monitoring_results)
 
                 self.current_state = "CoolingDown"
