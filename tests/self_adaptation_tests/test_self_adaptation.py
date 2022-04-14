@@ -206,7 +206,10 @@ class MockDatabase(IDatabase):
         signals = self._plant.signals
         # Find indexes for t_start_s and t_end_s
         t_start_idx = next(i for i, t in enumerate(signals["time"]) if t >= t_start_s)
-        t_end_idx = next(i for i, t in enumerate(signals["time"]) if t >= t_end_s)
+        try:
+            t_end_idx = next(i for i, t in enumerate(signals["time"]) if t >= t_end_s)
+        except StopIteration:
+            t_end_idx = len(signals["time"]) - 1
         return signals, t_start_idx, t_end_idx
 
     def store_calibrated_trajectory(self, times, calibrated_sol):
