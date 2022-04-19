@@ -14,6 +14,7 @@ class SelfAdaptationManager:
                  kalman_filter: IUpdateableKalmanFilter,
                  controller_optimizer: IControllerOptimizer,
                  verified_monitor,
+                 uncertainty_calibrator,
                  lookahead_time=0):
         assert 0 < ensure_anomaly_timer
         assert 0 < gather_data_timer
@@ -32,6 +33,9 @@ class SelfAdaptationManager:
         # controller in response to anomolies
         self.verified_monitor = verified_monitor
         self.lookahead_time = lookahead_time
+
+        # Uncertainty calibrator to calculate interval uncertain parameters
+        self.uncertainty_calibrator = uncertainty_calibrator
 
         # Collect together verified traces and models
         self.anomaly_durations = []
@@ -116,6 +120,12 @@ class SelfAdaptationManager:
                 reference_T_heater = vsignals["T_heater"][t_start_idx:t_end_idx]
                 room_T_range = vsignals["in_room_temperature"][t_start_idx:t_end_idx]
                 room_T = RIF(min(*room_T_range), max(*room_T_range))
+
+                if self.uncertainty_calibrator is None:
+                    T0 = RIF(reference_T[0])
+                    T_H0 = RIF(reference_T_heater[0])
+                else:
+                    T0, T_H0, C_air, G_box = self.uncertainty_calibrator.calibrate(times[0], times[-1], C_air, G_box, C_heater, G_heater)
 
                 # Run the verified twin simulation
                 monitoring_results = self.verified_monitor.verified_monitoring_results(
