@@ -25,7 +25,7 @@ class Calibrator:
         signals, t_start_idx, t_end_idx = self.database.get_plant_signals_between(t_start, t_end)
         times = signals["time"][t_start_idx:t_end_idx]
         reference_T = signals["T"][t_start_idx:t_end_idx]
-        ctrl_signal = signals["in_heater_on"][t_start_idx:t_end_idx]
+        ctrl_signal = signals["in_heater_on"][t_start_idx+1:t_end_idx+1]
         reference_T_heater = signals["T_heater"][t_start_idx:t_end_idx]
         room_T = signals["in_room_temperature"][t_start_idx:t_end_idx]
         assert len(reference_T) == len(times) == len(ctrl_signal) == len(reference_T_heater)
