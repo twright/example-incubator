@@ -42,6 +42,7 @@ class SelfAdaptationManager:
         self.anomaly_real_temperatures = []
         self.anomaly_predicted_temperatures = []
         self.anomaly_parameters = []
+        self.uncertainty_calibration_parameters = []
         self.verified_monitoring_results = []
 
         # Holds the next sample for which an action has to be taken.
@@ -105,6 +106,7 @@ class SelfAdaptationManager:
         if self.current_state == "Calibrating":
             assert self.time_anomaly_start >= 0.0
             assert self.time_anomaly_start <= time_s
+            time_s1 = time_s + 3.0
             success, C_air, G_box, C_heater, G_heater = self.calibrator.calibrate(self.time_anomaly_start, time_s)
             if success:
                 self.kalman_filter.update_parameters(C_air, G_box, C_heater, G_heater)
@@ -115,7 +117,7 @@ class SelfAdaptationManager:
                 n_samples_heating, n_samples_period, heater_ctrl_step = self.calibrator.database.get_ctrl_parameters()
                 vsignals, t_start_idx, t_end_idx = self.calibrator.database.get_plant_signals_between(
                     self.time_anomaly_start,
-                    time_s,
+                    time_s1,
                 )
                 times = vsignals["time"][t_start_idx:t_end_idx]
                 print(f"running verified monitoring for anomaly between times {times[0]} and {times[-1]}")
@@ -125,6 +127,9 @@ class SelfAdaptationManager:
                 room_T_range = vsignals["in_room_temperature"][t_start_idx:t_end_idx]
                 room_T = RIF(min(*room_T_range), max(*room_T_range))
 
+                self.uncertainty_calibration_parameters.append(
+                    (times[0], times[-1], C_air, G_box, C_heater, G_heater))
+
                 if self.uncertainty_calibrator is None:
                     T0 = RIF(reference_T[0])
                     T_H0 = RIF(reference_T_heater[0])
@@ -133,10 +138,10 @@ class SelfAdaptationManager:
 
                 # Run the verified twin simulation
                 monitoring_results = self.verified_monitor.verified_monitoring_results(
-                    self.time_anomaly_start,
-                    self.time_anomaly_start + self.lookahead_time,
-                    reference_T[0],
-                    reference_T_heater[0],
+                    times[-1],
+                    times[-1] + self.lookahead_time,
+                    T_H0,
+                    T0,
                     room_T,
                     heater_ctrl_step,
                     n_samples_period,
@@ -147,10 +152,10 @@ class SelfAdaptationManager:
                 # Store all of the verified models and traces in a list
                 self.anomaly_durations.append((times[0], times[-1]))
                 self.anomaly_parameters.append((
-                    self.time_anomaly_start,
-                    self.time_anomaly_start + self.lookahead_time,
-                    reference_T[0],
-                    reference_T_heater[0],
+                    times[-1],
+                    times[-1] + self.lookahead_time,
+                    T_H0,
+                    T0,
                     room_T,
                     heater_ctrl_step,
                     n_samples_period,
