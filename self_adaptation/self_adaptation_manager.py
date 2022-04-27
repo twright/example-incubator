@@ -39,6 +39,8 @@ class SelfAdaptationManager:
 
         # Collect together verified traces and models
         self.anomaly_durations = []
+        self.anomaly_real_temperatures = []
+        self.anomaly_predicted_temperatures = []
         self.anomaly_parameters = []
         self.verified_monitoring_results = []
 
@@ -59,6 +61,8 @@ class SelfAdaptationManager:
         if self.current_state == "Listening":
             assert not self.anomaly_detected
             assert self.next_action_timer < 0
+            self.anomaly_real_temperatures.append(real_temperature)
+            self.anomaly_predicted_temperatures.append(predicted_temperature)
             if skip_anomaly_detection:
                 self.time_anomaly_start = time_s
                 self.current_state = "GatheringData"

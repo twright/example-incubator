@@ -21,6 +21,7 @@ class SupervisorThresholdSM(ISupervisorSM):
         self.trigger_optimization_threshold = trigger_optimization_threshold
         self.heater_underused_threshold = heater_underused_threshold
         self.wait_til_supervising_timer = wait_til_supervising_timer
+        self.supervisor_trigger_times = []
 
         # Holds the next sample for which an action has to be taken.
         self.next_action_timer = -1
@@ -50,6 +51,7 @@ class SupervisorThresholdSM(ISupervisorSM):
                 # Reoptimize controller and then go into waiting
                 self.controller_optimizer.optimize_controller()
                 self.reset()
+                self.supervisor_trigger_times.append(time)
                 return
             else:
                 pass  # Remain in listening and keep checking for deviations.
