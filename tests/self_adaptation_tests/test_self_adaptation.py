@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 from oomodelling import ModelSolver
 import matplotlib.pyplot as plt
@@ -49,12 +51,12 @@ class SelfAdaptationTests(CLIModeTest):
         max_iterations = 200
         desired_temperature = 41
         max_t_heater = 60
-        restrict_T_heater = True
+        restrict_T_heater = False
 
         # Supervisor parameters
         trigger_optimization_threshold = 10.0
         heater_underused_threshold = 10.0
-        wait_til_supervising_timer = 100  # N steps supervisor should wait before kicking in.
+        wait_til_supervising_timer = math.inf # 100  # N steps supervisor should wait before kicking in.
 
         tf = 6000 if self.ide_mode() else 3000
 
@@ -103,17 +105,17 @@ class SelfAdaptationTests(CLIModeTest):
 
         ModelSolver().simulate(m, 0.0, tf, 3.0)
 
-        fig, (ax1, ax2, ax3, ax4, ax5, ax6) = plt.subplots(6, 1, sharex='all')
+        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, sharex='all')
 
         ax1.plot(m.signals['time'], m.physical_twin.plant.signals['T'], label=f"- T")
         ax1.plot(m.signals['time'], m.kalman.signals['out_T'], linestyle="dashed", label=f"~ T")
         # ax1.plot(m.signals['time'], m.kalman.signals['out_T_prior'], linestyle="dashed", label=f"~ T_prior")
 
-        for (times, trajectory) in database.plant_calibration_trajectory_history:
-            ax1.plot(times, trajectory[0, :], label=f"cal T", linestyle='dotted')
+        # for (times, trajectory) in database.plant_calibration_trajectory_history:
+        #     ax1.plot(times, trajectory[0, :], label=f"cal T", linestyle='dotted')
 
-        for (times, T, T_heater, heater_on) in database.ctrl_optimal_policy_history:
-            ax1.plot(times, T, label=f"opt T", linestyle='dotted')
+        # for (times, T, T_heater, heater_on) in database.ctrl_optimal_policy_history:
+        #     ax1.plot(times, T, label=f"opt T", linestyle='dotted')
 
         ax1.legend()
 
@@ -137,15 +139,15 @@ class SelfAdaptationTests(CLIModeTest):
                     label=f"Error")
         ax4.legend()
 
-        ax5.plot(m.signals['time'], m.kalman.signals['out_P_00'], label=f"P_00")
-        ax5.plot(m.signals['time'], m.kalman.signals['out_P_11'], label=f"P_11")
+        # ax5.plot(m.signals['time'], m.kalman.signals['out_P_00'], label=f"P_00")
+        # ax5.plot(m.signals['time'], m.kalman.signals['out_P_11'], label=f"P_11")
 
-        ax5.legend()
-
-        ax6.plot(m.signals['time'], m.kalman.signals['C_air'], label=f"C_air")
-        ax6.plot(m.signals['time'], m.kalman.signals['G_box'], label=f"G_box")
-
-        ax6.legend()
+        # ax5.legend()
+        #
+        # ax6.plot(m.signals['time'], m.kalman.signals['C_air'], label=f"C_air")
+        # ax6.plot(m.signals['time'], m.kalman.signals['G_box'], label=f"G_box")
+        #
+        # ax6.legend()
 
         if self.ide_mode():
             print("Parameters:")
@@ -153,6 +155,7 @@ class SelfAdaptationTests(CLIModeTest):
             print("G_box: ", database.G_box)
             print("C_heater: ", database.C_heater)
             print("G_heater: ", database.G_heater)
+            plt.savefig("simulation_result.pdf")
             plt.show()
 
 
