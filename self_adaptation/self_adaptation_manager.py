@@ -43,6 +43,7 @@ class SelfAdaptationManager:
         self.anomaly_predicted_temperatures = []
         self.anomaly_parameters = []
         self.uncertainty_calibration_parameters = []
+        self.anomaly_calibration_parameters = []
         self.verified_monitoring_results = []
 
         # Holds the next sample for which an action has to be taken.
@@ -133,13 +134,15 @@ class SelfAdaptationManager:
                 if self.uncertainty_calibrator is None:
                     T0 = RIF(reference_T[0])
                     T_H0 = RIF(reference_T_heater[0])
+                    T00 = RIF(reference_T[0])
+                    T_H00 = RIF(reference_T_heater[0])
                 else:
-                    T0, T_H0, C_air, G_box = self.uncertainty_calibrator.calibrate(times[0], times[-1], C_air, G_box, C_heater, G_heater)
+                    T00, T_H00, T0, T_H0, C_air, G_box = self.uncertainty_calibrator.calibrate(times[0], times[-1], C_air, G_box, C_heater, G_heater)
 
                 # Run the verified twin simulation
                 monitoring_results = self.verified_monitor.verified_monitoring_results(
-                    times[-1],
-                    times[-1] + self.lookahead_time,
+                    times[-1] + 3.0,
+                    times[-1] + 3.0 + self.lookahead_time,
                     T_H0,
                     T0,
                     room_T,
@@ -151,9 +154,20 @@ class SelfAdaptationManager:
                 
                 # Store all of the verified models and traces in a list
                 self.anomaly_durations.append((times[0], times[-1]))
+                self.anomaly_calibration_parameters.append((
+                    times[0],
+                    times[-1] + 3.0,
+                    T_H00,
+                    T00,
+                    room_T,
+                    heater_ctrl_step,
+                    n_samples_period,
+                    n_samples_heating,
+                    C_air, G_box, C_heater, G_heater,
+                ))
                 self.anomaly_parameters.append((
-                    times[-1],
-                    times[-1] + self.lookahead_time,
+                    times[-1] + 3.0,
+                    times[-1] + 3.0 + self.lookahead_time,
                     T_H0,
                     T0,
                     room_T,
