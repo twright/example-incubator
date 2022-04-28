@@ -107,7 +107,7 @@ class SelfAdaptationManager:
             assert self.time_anomaly_start >= 0.0
             assert self.time_anomaly_start <= time_s
             time_s1 = time_s + 3.0
-            success, C_air, G_box, C_heater, G_heater = self.calibrator.calibrate(self.time_anomaly_start, time_s)
+            success, C_air, G_box, C_heater, G_heater = self.calibrator.calibrate(self.time_anomaly_start, time_s1)
             if success:
                 self.kalman_filter.update_parameters(C_air, G_box, C_heater, G_heater)
                 self.controller_optimizer.optimize_controller()
