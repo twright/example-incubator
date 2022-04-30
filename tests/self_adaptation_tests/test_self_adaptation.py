@@ -42,7 +42,7 @@ class SelfAdaptationTests(CLIModeTest):
         ensure_anomaly_timer = 1
         # Time spent, after the self_adaptation_manager was declared as detected, just so enough data about the system is gathered.
         # The data used for recalibration will be in interval [time_first_occurrence, time_data_gathered]
-        gather_data_timer = 10
+        gather_data_timer = 12
         cool_down_timer = 5
         optimize_controller = True
 
@@ -51,7 +51,7 @@ class SelfAdaptationTests(CLIModeTest):
         max_iterations = 200
         desired_temperature = 41
         max_t_heater = 60
-        restrict_T_heater = False
+        restrict_T_heater = True
 
         # Supervisor parameters
         trigger_optimization_threshold = 10.0
@@ -103,7 +103,7 @@ class SelfAdaptationTests(CLIModeTest):
         # Commented out because it does not seem to work very well.
         # m.physical_twin.plant.C_air = lambda: C_air if m.time() < 1000 else (C_air * 7 if m.time() < 2000 else C_air)
 
-        ModelSolver().simulate(m, 0.0, tf, 3.0)
+        ModelSolver().simulate(m, 0.0, tf, step_size, step_size/10.0)
 
         fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, sharex='all')
 
@@ -206,10 +206,16 @@ class MockDatabase(IDatabase):
         self.n_samples_period.append(ctrl.param_n_samples_period)
 
     def get_plant_signals_between(self, t_start_s, t_end_s):
+        assert t_end_s >= t_start_s
         signals = self._plant.signals
+        time_signals = signals["time"]
         # Find indexes for t_start_s and t_end_s
-        t_start_idx = next(i for i, t in enumerate(signals["time"]) if t >= t_start_s)
-        t_end_idx = next(i for i, t in enumerate(signals["time"]) if t >= t_end_s)
+        t_start_idx = next(i for i, t in enumerate(time_signals) if t >= t_start_s)
+        t_end_idx = len(time_signals)-1
+        assert t_start_idx < t_end_idx
+        while time_signals[t_end_idx] > t_end_s:
+            t_end_idx -= 1
+        assert t_start_idx < t_end_idx
         return signals, t_start_idx, t_end_idx
 
     def store_calibrated_trajectory(self, times, calibrated_sol):

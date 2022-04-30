@@ -30,7 +30,7 @@ class CosimulationTests(CLIModeTest):
                                        C_heater=C_heater_num,
                                        G_heater=G_heater_num, heating_time=heating_time, heating_gap=2.0,
                                        temperature_desired=35, initial_box_temperature=22)
-            ModelSolver().simulate(m, 0.0, 3000, CTRL_EXEC_INTERVAL)
+            ModelSolver().simulate(m, 0.0, 3000, CTRL_EXEC_INTERVAL, CTRL_EXEC_INTERVAL/10.0)
 
             plt.plot(m.signals['time'], m.plant.signals['T'], label=f"Trial_{heating_time}")
 
@@ -55,7 +55,7 @@ class CosimulationTests(CLIModeTest):
                                    C_heater=C_heater_num,
                                    G_heater=G_heater_num, heating_time=20.0, heating_gap=30.0,
                                    temperature_desired=35, initial_box_temperature=22)
-        ModelSolver().simulate(m, 0.0, 3000, CTRL_EXEC_INTERVAL)
+        ModelSolver().simulate(m, 0.0, 3000, CTRL_EXEC_INTERVAL, CTRL_EXEC_INTERVAL/10.0)
 
         # Convert cosim data into a dataframe
         data_cosim = pd.DataFrame()
@@ -92,7 +92,7 @@ class CosimulationTests(CLIModeTest):
                                                C_heater,
                                                G_heater, initial_box_temperature,
                                                initial_heat_temperature)
-            ModelSolver().simulate(m, 0.0, 6000, CTRL_EXEC_INTERVAL)
+            ModelSolver().simulate(m, 0.0, 6000, CTRL_EXEC_INTERVAL, CTRL_EXEC_INTERVAL/10.0)
 
             plt.plot(m.signals['time'], m.plant.signals['T'], label=f"NHeating_{n_samples_heating}")
             if show_heater_signal:
