@@ -121,7 +121,6 @@ class SelfAdaptationManager:
                     time_s1,
                 )
                 times = vsignals["time"][t_start_idx:t_end_idx]
-                print(f"running verified monitoring for anomaly between times {times[0]} and {times[-1]}")
                 reference_T = vsignals["T"][t_start_idx:t_end_idx]
                 ctrl_signal = vsignals["in_heater_on"][t_start_idx:t_end_idx]
                 reference_T_heater = vsignals["T_heater"][t_start_idx:t_end_idx]
@@ -130,53 +129,56 @@ class SelfAdaptationManager:
 
                 self.uncertainty_calibration_parameters.append(
                     (times[0], times[-1], C_air, G_box, C_heater, G_heater))
+                self.anomaly_durations.append((times[0], times[-1]))
 
                 if self.uncertainty_calibrator is None:
-                    T0 = RIF(reference_T[0])
-                    T_H0 = RIF(reference_T_heater[0])
+                    T0 = RIF(reference_T[-1])
+                    T_H0 = RIF(reference_T_heater[-1])
                     T00 = RIF(reference_T[0])
                     T_H00 = RIF(reference_T_heater[0])
                 else:
-                    T00, T_H00, T0, T_H0, C_air, G_box = self.uncertainty_calibrator.calibrate(times[0], times[-1], C_air, G_box, C_heater, G_heater)
+                    print(f"running uncertainty calibration for anomaly between times {times[0]} and {times[-1]}")
+                    T_H00, T00, T_H0, T0, C_air, G_box = self.uncertainty_calibrator.calibrate(times[0], times[-1], C_air, G_box, C_heater, G_heater)
 
-                # Run the verified twin simulation
-                monitoring_results = self.verified_monitor.verified_monitoring_results(
-                    times[-1] + 3.0,
-                    times[-1] + 3.0 + self.lookahead_time,
-                    T_H0,
-                    T0,
-                    room_T,
-                    heater_ctrl_step,
-                    n_samples_period,
-                    n_samples_heating,
-                    C_air, G_box, C_heater, G_heater,
-                )
-                
-                # Store all of the verified models and traces in a list
-                self.anomaly_durations.append((times[0], times[-1]))
-                self.anomaly_calibration_parameters.append((
-                    times[0],
-                    times[-1] + 3.0,
-                    T_H00,
-                    T00,
-                    room_T,
-                    heater_ctrl_step,
-                    n_samples_period,
-                    n_samples_heating,
-                    C_air, G_box, C_heater, G_heater,
-                ))
-                self.anomaly_parameters.append((
-                    times[-1] + 3.0,
-                    times[-1] + 3.0 + self.lookahead_time,
-                    T_H0,
-                    T0,
-                    room_T,
-                    heater_ctrl_step,
-                    n_samples_period,
-                    n_samples_heating,
-                    C_air, G_box, C_heater, G_heater,
-                ))
-                self.verified_monitoring_results.append(monitoring_results)
+                if self.verified_monitor is not None:
+                    print(f"running verified monitoring for anomaly between times {times[0]} and {times[-1]}")
+                    # Run the verified twin simulation
+                    monitoring_results = self.verified_monitor.verified_monitoring_results(
+                        times[-1] + 3.0,
+                        times[-1] + 3.0 + self.lookahead_time,
+                        T0,
+                        T_H0,
+                        room_T,
+                        heater_ctrl_step,
+                        n_samples_period,
+                        n_samples_heating,
+                        C_air, G_box, C_heater, G_heater,
+                    )
+                    
+                    # Store all of the verified models and traces in a list
+                    self.anomaly_calibration_parameters.append((
+                        times[0],
+                        times[-1] + 3.0,
+                        T00,
+                        T_H00,
+                        room_T,
+                        heater_ctrl_step,
+                        n_samples_period,
+                        n_samples_heating,
+                        C_air, G_box, C_heater, G_heater,
+                    ))
+                    self.anomaly_parameters.append((
+                        times[-1] + 3.0,
+                        times[-1] + 3.0 + self.lookahead_time,
+                        T0,
+                        T_H0,
+                        room_T,
+                        heater_ctrl_step,
+                        n_samples_period,
+                        n_samples_heating,
+                        C_air, G_box, C_heater, G_heater,
+                    ))
+                    self.verified_monitoring_results.append(monitoring_results)
 
                 self.current_state = "CoolingDown"
                 self.next_action_timer = self.cool_down_timer

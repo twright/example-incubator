@@ -86,6 +86,11 @@ class SupervisorPeriodicSM(ISupervisorSM):
             return
 
 
+class SupervisorNOOPSM(ISupervisorSM):
+    def step(self, T, T_heater, time):
+        return
+
+
 class SupervisorModel(Model):
     def __init__(self, sm: ISupervisorSM):
         super().__init__()
