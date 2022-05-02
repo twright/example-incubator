@@ -21,7 +21,9 @@ class SystemModel4ParametersOpenLoopSimulator:
         model.plant.in_room_temperature = lambda: initial_room_T
 
         # Run simulation
-        sol = ModelSolver().simulate(model, t0, tf, controller_step_size)
+        sol = ModelSolver().simulate(model, t0, tf,
+                                     controller_step_size,
+                                     controller_step_size/10.0)
 
         # Return model that has the results
         return model

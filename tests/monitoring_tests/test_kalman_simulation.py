@@ -26,7 +26,7 @@ class TestKalmanSimulation(CLIModeTest):
                               C_heater=C_heater_num,
                               G_heater=G_heater_num)
 
-        ModelSolver().simulate(m, 0.0, 800, step_size)
+        ModelSolver().simulate(m, 0.0, 800, step_size, step_size/10.0)
 
         plt.figure()
         plt.plot(m.signals['time'], m.noise_sensor.signals['y'], label="sensor T")

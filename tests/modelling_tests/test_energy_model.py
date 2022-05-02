@@ -19,7 +19,7 @@ class TestsModelling(CLIModeTest):
         model.in_heater_on = lambda: True
         t0 = 0.0
         tf = 5.0
-        sol = ModelSolver().simulate(model, t0, tf, 0.1)
+        sol = ModelSolver().simulate(model, t0, tf, 0.1, 0.01)
 
         plt.figure()
 
@@ -55,7 +55,7 @@ class TestsModelling(CLIModeTest):
         t0 = data.iloc[0]["time"]
         tf = data.iloc[-1]["time"]
 
-        ModelSolver().simulate(model, t0, tf, CTRL_EXEC_INTERVAL, t_eval=data["time"])
+        ModelSolver().simulate(model, t0, tf, CTRL_EXEC_INTERVAL, CTRL_EXEC_INTERVAL/10.0, t_eval=data["time"])
 
         fig = plotly_incubator_data(data,
                                     compare_to={

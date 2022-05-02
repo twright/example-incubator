@@ -74,7 +74,7 @@ def run_experiment_two_parameter_model(data, params, h=CTRL_EXEC_INTERVAL):
 
     t0 = data.iloc[0]["time"]
     tf = data.iloc[-1]["time"]
-    sol = ModelSolver().simulate(model, t0, tf, h, t_eval=data["time"])
+    sol = ModelSolver().simulate(model, t0, tf, h, h/100.0, t_eval=data["time"])
     return model, sol
 
 
@@ -98,7 +98,7 @@ def run_experiment_four_parameter_model(data, params, h=CTRL_EXEC_INTERVAL):
 
     t0 = data.iloc[0]["time"]
     tf = data.iloc[-1]["time"]
-    sol = ModelSolver().simulate(model, t0, tf, h, t_eval=time_range)
+    sol = ModelSolver().simulate(model, t0, tf, h, h/10.0, t_eval=time_range)
     return model, sol
 
 
@@ -135,7 +135,7 @@ def run_experiment_seven_parameter_model(data, params,
 
     t0 = data.iloc[0]["time"]
     tf = data.iloc[-1]["time"]
-    sol = ModelSolver().simulate(model, t0, tf, h, t_eval=data["time"])
+    sol = ModelSolver().simulate(model, t0, tf, h, h/10.0, t_eval=data["time"])
     return model, sol
 
 

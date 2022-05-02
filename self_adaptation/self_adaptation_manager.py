@@ -215,7 +215,6 @@ class SelfAdaptationManager:
             return
 
 
-
 class SelfAdaptationModel(Model):
     def __init__(self,
                  manager: SelfAdaptationManager

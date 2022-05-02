@@ -76,7 +76,7 @@ class TestsModelling(CLIModeTest):
         data, _ = load_data("./datasets/calibration_fan_12v/random_on_off_sequences.csv")
         results, sol = run_experiment_two_parameter_model(data, params, h=CTRL_EXEC_INTERVAL)
 
-        fig, (ax1, ax2, ax4) = plt.subplots(3, 1)
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1)
 
         ax1.plot(data["time"], data["t1"], label="t1")
         ax1.plot(data["time"], data["t2"], label="t2")
@@ -87,7 +87,7 @@ class TestsModelling(CLIModeTest):
         ax1.legend()
 
         ax2.plot(data["time"], data["heater_on"], label="heater_on")
-        ax2.plot(data["time"], data["fan_on"], label="fan_on")
+        # ax2.plot(data["time"], data["fan_on"], label="fan_on")
         ax2.plot(results.signals["time"], results.signals["in_heater_on"], label="~heater_on")
         ax2.legend()
 
@@ -95,16 +95,19 @@ class TestsModelling(CLIModeTest):
         comparable_length = min(len(results.signals["in_heater_on"]), len(data["heater_on"]))
 
         convert_bool = lambda bool_array: [1.0 if b else 0.0 for b in bool_array]
-        least_squared_error = lambda a, b: sum(((numpy.array(a)[0:comparable_length] - numpy.array(b)[0:comparable_length]) ** 2))
+        sum_squared_error = lambda a, b: sum(((numpy.array(a)[0:comparable_length] - numpy.array(b)[0:comparable_length]) ** 2))
 
-        self.assertTrue(least_squared_error(convert_bool(data["heater_on"]), convert_bool(results.signals["in_heater_on"])) < 1.0)
+        error_heater_in = sum_squared_error(convert_bool(data["heater_on"]), convert_bool(results.signals["in_heater_on"]))
+        # print(f"error_heater_in={error_heater_in}")
+        self.assertTrue(error_heater_in < 1.0)
 
-        ax4.plot(data["time"], data["power_in"], label="power_in")
-        ax4.plot(results.signals["time"], results.signals["power_in"], label="~power_in")
-        ax4.legend()
+        ax3.plot(data["time"], data["power_in"], label="power_in")
+        ax3.plot(results.signals["time"], results.signals["power_in"], label="~power_in")
+        ax3.legend()
 
-        self.assertTrue(least_squared_error(data["power_in"],
-                                            results.signals["power_in"]) < 1.0)
+        error_power_in = sum_squared_error(data["power_in"], results.signals["power_in"])
+        # print(f"error_power_in={error_power_in}")
+        self.assertTrue(error_power_in < 1.0)
 
         if self.ide_mode():
             plt.show()

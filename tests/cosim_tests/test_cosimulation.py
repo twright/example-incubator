@@ -13,7 +13,7 @@ class CosimulationTests(CLIModeTest):
     def test_run_cosim_2param_model(self):
         m = SystemModel()
 
-        ModelSolver().simulate(m, 0.0, 10, 0.01)
+        ModelSolver().simulate(m, 0.0, 10, 0.01, 0.001)
 
         plt.figure()
         plt.plot(m.signals['time'], m.plant.signals['T'])
