@@ -15,7 +15,8 @@ class SelfAdaptationManager:
                  controller_optimizer: IControllerOptimizer,
                  verified_monitor,
                  uncertainty_calibrator,
-                 lookahead_time=0):
+                 lookahead_time=0,
+                 enforcing=None):
         assert 0 < ensure_anomaly_timer
         assert 0 < gather_data_timer
         assert 0 < anomaly_threshold
@@ -45,6 +46,7 @@ class SelfAdaptationManager:
         self.uncertainty_calibration_parameters = []
         self.anomaly_calibration_parameters = []
         self.verified_monitoring_results = []
+        self.enforcing = enforcing
 
         # Holds the next sample for which an action has to be taken.
         self.next_action_timer = -1
@@ -154,6 +156,25 @@ class SelfAdaptationManager:
                         n_samples_heating,
                         C_air, G_box, C_heater, G_heater,
                     )
+
+                    if (self.enforcing is not None
+                            and (monitoring_results[self.enforcing][0] is not True)):
+                        print("Turning off heater due to monitoring failure")
+                        del self.controller_optimizer.database.ctrl_optimal_policy_history[-1]
+                        del self.controller_optimizer.database.n_samples_heating[-1]
+                        del self.controller_optimizer.database.n_samples_period[-1]
+                        self.controller_optimizer.controller.set_new_parameters(0, n_samples_period)
+                        self.controller_optimizer.database.store_new_ctrl_parameters(time_s, 0, n_samples_period, 3.0)
+                        _, Ta, T_heatera, room_Ta = self.controller_optimizer.database.get_plant_snapshot()
+                        fixed_model = self.controller_optimizer.pt_simulator.run_simulation(time_s, time_s + 3000, Ta, T_heatera, room_Ta,
+                                                 0, n_samples_period, 3.0,
+                                                 C_air, G_box, C_heater, G_heater)
+                        self.controller_optimizer.database.store_controller_optimal_policy(fixed_model.signals['time'],
+                                                      fixed_model.plant.signals['T'],
+                                                      fixed_model.plant.signals['T_heater'],
+                                                      fixed_model.ctrl.signals['heater_on'])
+
+
                     
                     # Store all of the verified models and traces in a list
                     self.anomaly_calibration_parameters.append((
